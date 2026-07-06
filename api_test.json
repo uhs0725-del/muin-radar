@@ -1,0 +1,108 @@
+{
+  "ok": true,
+  "addressInput": "강남역",
+  "addressNorm": "서울 강남구 역삼동 858",
+  "region": {
+    "code": "1168064000",
+    "dong": "역삼1동",
+    "gu": "강남구",
+    "si": "서울특별시",
+    "full": "서울특별시 강남구 역삼1동"
+  },
+  "population": {
+    "pop": 34205,
+    "sede": 23851
+  },
+  "radiusM": 1000,
+  "mode": "인구 정규화 ON · 중심 행정동 역삼1동 인구 34,205명 / 23,851세대",
+  "results": [
+    {
+      "category": "studycafe",
+      "label": "스터디카페",
+      "measurable": true,
+      "count": 66,
+      "sample": [
+        "공간더하기 스터디카페 강남타워점",
+        "우주런 랭귀지 스페이스",
+        "작심스터디카페 강남역점",
+        "랭스영 강남",
+        "메가로스쿨 조성우스터디카페&연구소",
+        "에스랩 스터디카페 강남3호점"
+      ],
+      "score": {
+        "score": 95.7,
+        "metric": "per_10k_pop",
+        "light": "red",
+        "verdict": "포화 — 신규 진입 회피 권장",
+        "storesPer10kPop": 19.3,
+        "densityPerKm2": 21,
+        "calibration": "provisional"
+      }
+    },
+    {
+      "category": "laundry",
+      "label": "코인빨래방",
+      "measurable": true,
+      "count": 16,
+      "sample": [
+        "크린업24 강남역삼점",
+        "에코런드렛 강남역점",
+        "크린토피아 코인워시365 역삼역점",
+        "에코런드렛 역삼점",
+        "크린토피아 코인워시 서울교대점",
+        "워시엔조이 서초효성점"
+      ],
+      "score": {
+        "score": 14.5,
+        "metric": "per_10k_pop",
+        "light": "green",
+        "verdict": "여유 — 진입 검토 가능",
+        "storesPer10kPop": 4.7,
+        "densityPerKm2": 5.1,
+        "calibration": "provisional"
+      }
+    },
+    {
+      "category": "convenience",
+      "label": "편의점(전체)",
+      "measurable": "proxy",
+      "note": "카카오 데이터에 '무인' 구분이 없어 무인만 골라낼 수 없습니다. 편의점 전체 밀도로 대체 표시합니다.",
+      "count": 148,
+      "sample": [
+        "GS25 강남프리미엄점",
+        "GS25 강남본점",
+        "CU 서초동아타워점",
+        "세븐일레븐 뉴강남센터점",
+        "GS25 서초여신점",
+        "세븐일레븐 강남스퀘어점"
+      ],
+      "score": {
+        "score": 100,
+        "metric": "per_10k_pop",
+        "light": "red",
+        "verdict": "포화 — 신규 진입 회피 권장",
+        "storesPer10kPop": 43.3,
+        "densityPerKm2": 47.1,
+        "calibration": "provisional"
+      }
+    },
+    {
+      "category": "icecream",
+      "label": "무인아이스크림",
+      "measurable": true,
+      "count": 1,
+      "sample": [
+        "아이스크림24시할인점"
+      ],
+      "score": {
+        "score": 3.8,
+        "metric": "per_10k_pop",
+        "light": "green",
+        "verdict": "여유 — 진입 검토 가능",
+        "storesPer10kPop": 0.3,
+        "densityPerKm2": 0.3,
+        "calibration": "provisional"
+      }
+    }
+  ]
+}
