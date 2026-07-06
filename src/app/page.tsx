@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/categories";
+import { coupangItemsFor, coupangSearchLink, COUPANG_DISCLOSURE } from "@/lib/coupang";
 
 interface ScoreResult {
   score: number;
@@ -24,12 +26,17 @@ interface CategoryResult {
 interface Diagnosis {
   ok: boolean;
   error?: string;
+  quotaExceeded?: boolean;
   addressNorm?: string;
   region?: { si: string; gu: string; dong: string } | null;
   population?: { pop: number; sede: number } | null;
   radiusM: number;
   mode: string;
   results: CategoryResult[];
+  paid?: boolean;
+  freeLimit?: number;
+  freeUsed?: number;
+  freeRemaining?: number | null;
 }
 
 const LIGHT_BG: Record<string, string> = {
@@ -44,6 +51,7 @@ const LIGHT_TEXT: Record<string, string> = {
 };
 
 export default function Home() {
+  const router = useRouter();
   const RADII = [500, 1000, 2000, 3000] as const;
   const [address, setAddress] = useState("");
   const [radius, setRadius] = useState<number>(1000);
@@ -57,6 +65,18 @@ export default function Home() {
     );
   }
 
+  // 결제 후 상세 리포트가 이 진단을 재현할 수 있도록 컨텍스트 저장.
+  function saveReportCtx() {
+    try {
+      localStorage.setItem(
+        "mr_report_ctx",
+        JSON.stringify({ address: address.trim(), categories: selected, radius }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function run() {
     if (!address.trim() || !selected.length) return;
     setLoading(true);
@@ -67,7 +87,9 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address, categories: selected, radius }),
       });
-      setData(await res.json());
+      const json: Diagnosis = await res.json();
+      setData(json);
+      if (json.ok) saveReportCtx();
     } catch (e) {
       setData({
         ok: false,
@@ -79,6 +101,11 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function goReport() {
+    saveReportCtx();
+    router.push("/report");
   }
 
   return (
@@ -156,6 +183,20 @@ export default function Home() {
         >
           {loading ? "진단 중…" : "포화도 진단 시작"}
         </button>
+
+        {data?.ok &&
+          (data.paid ? (
+            <p className="mt-2 text-center text-xs font-medium text-emerald-600">
+              이용권 활성화 · 무제한 진단
+            </p>
+          ) : (
+            data.freeRemaining !== null &&
+            data.freeRemaining !== undefined && (
+              <p className="mt-2 text-center text-xs text-slate-400">
+                오늘 무료 진단 {data.freeUsed}/{data.freeLimit}회 사용 · 남은 {data.freeRemaining}회
+              </p>
+            )
+          ))}
       </section>
 
       {/* 로딩 */}
@@ -169,9 +210,28 @@ export default function Home() {
       {data && !loading && (
         <section className="mt-6 space-y-4">
           {!data.ok ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-              {data.error}
-            </div>
+            data.quotaExceeded ? (
+              <div className="rounded-2xl border border-slate-900 bg-slate-900 p-5 text-white">
+                <div className="text-lg font-bold">오늘 무료 진단을 다 썼어요</div>
+                <p className="mt-1 text-sm text-slate-300">{data.error}</p>
+                <button
+                  onClick={() => router.push("/checkout")}
+                  className="mt-4 w-full rounded-xl bg-white py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100"
+                >
+                  ₩9,900 · 30일 무제한 + 상세 리포트 결제
+                </button>
+                <button
+                  onClick={() => router.push("/report/sample")}
+                  className="mt-2 w-full text-center text-xs text-slate-300 underline hover:text-white"
+                >
+                  예시 리포트 먼저 보기
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+                {data.error}
+              </div>
+            )
           ) : (
             <>
               <div className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -188,6 +248,61 @@ export default function Home() {
               {data.results.map((r) => (
                 <ResultCard key={r.category} r={r} />
               ))}
+
+              {/* 유료 상세 리포트 CTA */}
+              <div className="rounded-2xl border-2 border-slate-900 bg-white p-5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">📄</span>
+                  <h3 className="text-base font-bold text-slate-900">상세 리포트 (PDF)</h3>
+                  <span className="ml-auto text-lg font-extrabold text-slate-900">₩9,900</span>
+                </div>
+                <ul className="mt-3 space-y-1 text-sm text-slate-600">
+                  <li>· 경쟁 매장 <b>전체 리스트</b> (이름 + 거리)</li>
+                  <li>· 4개 반경(500m·1km·2km·3km) <b>비교 테이블</b></li>
+                  <li>· 규칙 기반 <b>종합 결론</b> + 데이터 출처·면책</li>
+                  <li>· A4 인쇄 최적화 · <b>30일 무제한 진단</b> 포함</li>
+                </ul>
+                <button
+                  onClick={goReport}
+                  className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  상세 리포트 보기 (₩9,900 · 30일 이용권)
+                </button>
+                <button
+                  onClick={() => router.push("/report/sample")}
+                  className="mt-2 w-full text-center text-xs text-slate-500 underline hover:text-slate-900"
+                >
+                  예시 리포트 먼저 보기
+                </button>
+                <p className="mt-2 text-center text-xs text-slate-400">
+                  {data.paid
+                    ? "이용권이 활성화되어 있습니다."
+                    : "테스트 결제 모드 · 30일 이용권(자동갱신 아님)"}
+                </p>
+              </div>
+
+              {/* 쿠팡 파트너스 맥락 링크 */}
+              {coupangItemsFor(selected).length > 0 && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <h3 className="text-sm font-bold text-slate-700">업종별 추천 상품 (쿠팡)</h3>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {coupangItemsFor(selected).map(({ item }, i) => (
+                      <a
+                        key={i}
+                        href={coupangSearchLink(item.query)}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                        className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 transition hover:border-slate-400"
+                      >
+                        {item.label} →
+                      </a>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+                    {COUPANG_DISCLOSURE}
+                  </p>
+                </div>
+              )}
 
               <p className="px-1 text-xs leading-relaxed text-slate-400">
                 ※ 점수는 잠정 기준입니다. 매장 수는 카카오 로컬 검색(반경 기준), 인구는 중심 행정동

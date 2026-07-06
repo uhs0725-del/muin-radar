@@ -1,0 +1,922 @@
+{
+ "ok": true,
+ "addressInput": "강남역",
+ "addressNorm": "서울 강남구 역삼동 858",
+ "region": {
+  "code": "1168064000",
+  "dong": "역삼1동",
+  "gu": "강남구",
+  "si": "서울특별시",
+  "full": "서울특별시 강남구 역삼1동"
+ },
+ "population": {
+  "pop": 34205,
+  "sede": 23851
+ },
+ "radiusM": 1000,
+ "mode": "인구 정규화 ON · 중심 행정동 역삼1동 인구 34,205명 / 23,851세대",
+ "generatedAt": "2026-07-06T02:32:41.779Z",
+ "categories": [
+  {
+   "category": "studycafe",
+   "label": "스터디카페",
+   "measurable": true,
+   "primary": {
+    "category": "studycafe",
+    "label": "스터디카페",
+    "measurable": true,
+    "count": 38,
+    "sample": [
+     "작심스터디카페 강남역점",
+     "우주런 랭귀지 스페이스",
+     "플레이스다온",
+     "강남역 포커스 스터디룸모임공간",
+     "모임일주스터디룸",
+     "공튜디오"
+    ],
+    "stores": [
+     {
+      "id": "2012062467",
+      "name": "작심스터디카페 강남역점",
+      "distanceM": 173
+     },
+     {
+      "id": "1529647422",
+      "name": "우주런 랭귀지 스페이스",
+      "distanceM": 198
+     },
+     {
+      "id": "286845355",
+      "name": "플레이스다온",
+      "distanceM": 242
+     },
+     {
+      "id": "100518685",
+      "name": "강남역 포커스 스터디룸모임공간",
+      "distanceM": 256
+     },
+     {
+      "id": "85600435",
+      "name": "모임일주스터디룸",
+      "distanceM": 257
+     },
+     {
+      "id": "1132859071",
+      "name": "공튜디오",
+      "distanceM": 257
+     },
+     {
+      "id": "205117121",
+      "name": "허슬버슬",
+      "distanceM": 318
+     },
+     {
+      "id": "1246176629",
+      "name": "메가로스쿨 조성우스터디카페&연구소",
+      "distanceM": 328
+     },
+     {
+      "id": "1415028713",
+      "name": "선배스터디센터 스터디카페",
+      "distanceM": 377
+     },
+     {
+      "id": "1572089555",
+      "name": "스터디플래닛 라이브러리 강남직영센터",
+      "distanceM": 377
+     },
+     {
+      "id": "363872947",
+      "name": "강남역스터디룸 틈612",
+      "distanceM": 389
+     },
+     {
+      "id": "1550481090",
+      "name": "강남311",
+      "distanceM": 395
+     },
+     {
+      "id": "1112188781",
+      "name": "우리끼리놀이터 스터디룸 파티룸",
+      "distanceM": 395
+     },
+     {
+      "id": "78914508",
+      "name": "우와미스윗골",
+      "distanceM": 395
+     },
+     {
+      "id": "1577362915",
+      "name": "프리즘스터디센터 강남점",
+      "distanceM": 399
+     },
+     {
+      "id": "1644483634",
+      "name": "상상플러스 스터디룸 2호점",
+      "distanceM": 403
+     },
+     {
+      "id": "686835215",
+      "name": "에스랩 스터디카페 강남3호점",
+      "distanceM": 416
+     },
+     {
+      "id": "69237920",
+      "name": "스터디카페 Nest24 강남역1호점",
+      "distanceM": 427
+     },
+     {
+      "id": "1830619011",
+      "name": "강남역 스터디룸 스타디룸 1호점",
+      "distanceM": 450
+     },
+     {
+      "id": "888914779",
+      "name": "공간이즈",
+      "distanceM": 476
+     },
+     {
+      "id": "619876931",
+      "name": "24시공존스터디룸 강남점",
+      "distanceM": 476
+     },
+     {
+      "id": "285465090",
+      "name": "체어맨 파티룸",
+      "distanceM": 487
+     },
+     {
+      "id": "1925366481",
+      "name": "공간더하기 스터디카페 강남타워점",
+      "distanceM": 500
+     },
+     {
+      "id": "1674379332",
+      "name": "랭스영 강남",
+      "distanceM": 505
+     },
+     {
+      "id": "1908455250",
+      "name": "에스랩 스터디카페 &스터디룸 강남4호점",
+      "distanceM": 512
+     },
+     {
+      "id": "321025445",
+      "name": "모멘텀",
+      "distanceM": 540
+     },
+     {
+      "id": "19909023",
+      "name": "모임플러스",
+      "distanceM": 587
+     },
+     {
+      "id": "1501835050",
+      "name": "sol스터디카페 (화이트썬리얼티)",
+      "distanceM": 611
+     },
+     {
+      "id": "1320398306",
+      "name": "에스랩스터디카페 강남 2호점 2관",
+      "distanceM": 630
+     },
+     {
+      "id": "787772823",
+      "name": "사이프로",
+      "distanceM": 656
+     },
+     {
+      "id": "2040789546",
+      "name": "만점24스터디카페 서초점",
+      "distanceM": 671
+     },
+     {
+      "id": "157488190",
+      "name": "에스랩 스터디카페 & 스터디룸 2호점 1관",
+      "distanceM": 676
+     },
+     {
+      "id": "1745691929",
+      "name": "위스터디카페 신논현점",
+      "distanceM": 686
+     },
+     {
+      "id": "1798567158",
+      "name": "모빅회관",
+      "distanceM": 696
+     },
+     {
+      "id": "851328121",
+      "name": "에스랩 스터디카페&스터디룸 강남1호점",
+      "distanceM": 766
+     },
+     {
+      "id": "1182765064",
+      "name": "스터디카페더딩글 서초교대점",
+      "distanceM": 830
+     },
+     {
+      "id": "1212264109",
+      "name": "엘알마 역삼점",
+      "distanceM": 954
+     },
+     {
+      "id": "66898213",
+      "name": "트리니티스터디 카페 서초점",
+      "distanceM": 956
+     }
+    ],
+    "score": {
+     "score": 90.8,
+     "metric": "national_percentile",
+     "light": "red",
+     "verdict": "포화 — 신규 진입 회피 권장",
+     "storesPer10kPop": 11.1,
+     "nationalTopPct": 9.2,
+     "densityPerKm2": 12.1,
+     "calibration": "n=250"
+    }
+   },
+   "byRadius": [
+    {
+     "radiusM": 500,
+     "count": 22,
+     "storesPer10kPop": 6.4,
+     "nationalTopPct": 4.9,
+     "light": "red"
+    },
+    {
+     "radiusM": 1000,
+     "count": 38,
+     "storesPer10kPop": 11.1,
+     "nationalTopPct": 9.2,
+     "light": "red"
+    },
+    {
+     "radiusM": 2000,
+     "count": 46,
+     "storesPer10kPop": 13.4,
+     "nationalTopPct": 30.2,
+     "light": "yellow"
+    },
+    {
+     "radiusM": 3000,
+     "count": 46,
+     "storesPer10kPop": 13.4,
+     "nationalTopPct": 40.5,
+     "light": "green"
+    }
+   ]
+  },
+  {
+   "category": "laundry",
+   "label": "코인빨래방",
+   "measurable": true,
+   "primary": {
+    "category": "laundry",
+    "label": "코인빨래방",
+    "measurable": true,
+    "count": 16,
+    "sample": [
+     "에코런드렛 강남역점",
+     "크린업24 강남역삼점",
+     "에코런드렛 역삼점",
+     "에코런드렛 아크로텔강남역점",
+     "빨래터빨래방 역삼점",
+     "빨래터빨래방 신논현점"
+    ],
+    "stores": [
+     {
+      "id": "736836855",
+      "name": "에코런드렛 강남역점",
+      "distanceM": 122
+     },
+     {
+      "id": "781754195",
+      "name": "크린업24 강남역삼점",
+      "distanceM": 201
+     },
+     {
+      "id": "1589780719",
+      "name": "에코런드렛 역삼점",
+      "distanceM": 519
+     },
+     {
+      "id": "1172069262",
+      "name": "에코런드렛 아크로텔강남역점",
+      "distanceM": 684
+     },
+     {
+      "id": "917427251",
+      "name": "빨래터빨래방 역삼점",
+      "distanceM": 687
+     },
+     {
+      "id": "1550687298",
+      "name": "빨래터빨래방 신논현점",
+      "distanceM": 733
+     },
+     {
+      "id": "1891156009",
+      "name": "워시엔조이 서초효성점",
+      "distanceM": 766
+     },
+     {
+      "id": "247215860",
+      "name": "화이트365 강남역점",
+      "distanceM": 845
+     },
+     {
+      "id": "685855679",
+      "name": "AMPM워시큐 신논현점",
+      "distanceM": 849
+     },
+     {
+      "id": "19099441",
+      "name": "크린토피아 코인워시365 역삼역점",
+      "distanceM": 856
+     },
+     {
+      "id": "747961858",
+      "name": "런드리24 강남역점",
+      "distanceM": 874
+     },
+     {
+      "id": "1126330374",
+      "name": "셀프빨래방 88워시 역삼점",
+      "distanceM": 943
+     },
+     {
+      "id": "22167454",
+      "name": "크린토피아 코인워시 서울교대점",
+      "distanceM": 965
+     },
+     {
+      "id": "1878461089",
+      "name": "크린토피아 코인워시 서초그랑자이점",
+      "distanceM": 985
+     },
+     {
+      "id": "1418637058",
+      "name": "다온런드리",
+      "distanceM": 987
+     },
+     {
+      "id": "14586516",
+      "name": "크린토피아 코인워시 반포언구비점",
+      "distanceM": 989
+     }
+    ],
+    "score": {
+     "score": 74.8,
+     "metric": "national_percentile",
+     "light": "yellow",
+     "verdict": "주의 — 차별화 없으면 위험",
+     "storesPer10kPop": 4.7,
+     "nationalTopPct": 25.2,
+     "densityPerKm2": 5.1,
+     "calibration": "n=250"
+    }
+   },
+   "byRadius": [
+    {
+     "radiusM": 500,
+     "count": 2,
+     "storesPer10kPop": 0.6,
+     "nationalTopPct": 44,
+     "light": "green"
+    },
+    {
+     "radiusM": 1000,
+     "count": 16,
+     "storesPer10kPop": 4.7,
+     "nationalTopPct": 25.2,
+     "light": "yellow"
+    },
+    {
+     "radiusM": 2000,
+     "count": 45,
+     "storesPer10kPop": 13.2,
+     "nationalTopPct": 27.9,
+     "light": "yellow"
+    },
+    {
+     "radiusM": 3000,
+     "count": 45,
+     "storesPer10kPop": 13.2,
+     "nationalTopPct": 40.4,
+     "light": "green"
+    }
+   ]
+  },
+  {
+   "category": "photobooth",
+   "label": "무인사진관",
+   "measurable": true,
+   "primary": {
+    "category": "photobooth",
+    "label": "무인사진관",
+    "measurable": true,
+    "count": 15,
+    "sample": [
+     "포토그레이 강남2호점",
+     "하루필름 하루에어 강남점",
+     "픽닷 강남역점",
+     "포토이즘박스 강남2호점",
+     "포토그레이 서울강남점",
+     "더필름 강남점"
+    ],
+    "stores": [
+     {
+      "id": "1882754845",
+      "name": "포토그레이 강남2호점",
+      "distanceM": 198
+     },
+     {
+      "id": "386067946",
+      "name": "하루필름 하루에어 강남점",
+      "distanceM": 216
+     },
+     {
+      "id": "283917524",
+      "name": "픽닷 강남역점",
+      "distanceM": 260
+     },
+     {
+      "id": "755635358",
+      "name": "포토이즘박스 강남2호점",
+      "distanceM": 364
+     },
+     {
+      "id": "623333157",
+      "name": "포토그레이 서울강남점",
+      "distanceM": 404
+     },
+     {
+      "id": "1726840365",
+      "name": "더필름 강남점",
+      "distanceM": 412
+     },
+     {
+      "id": "808642136",
+      "name": "모노맨션 강남역점",
+      "distanceM": 426
+     },
+     {
+      "id": "177775133",
+      "name": "포토이즘박스 강남1호점",
+      "distanceM": 452
+     },
+     {
+      "id": "1990587653",
+      "name": "포토이즘컬러드 강남점",
+      "distanceM": 455
+     },
+     {
+      "id": "885605800",
+      "name": "돈룩업 강남",
+      "distanceM": 479
+     },
+     {
+      "id": "1157130589",
+      "name": "BYTP 강남플래그십스토어",
+      "distanceM": 485
+     },
+     {
+      "id": "631243797",
+      "name": "코드 바이 포토시그니처 강남1호점",
+      "distanceM": 498
+     },
+     {
+      "id": "1918922003",
+      "name": "티미드벨",
+      "distanceM": 503
+     },
+     {
+      "id": "1668597715",
+      "name": "하루필름 강남역점",
+      "distanceM": 555
+     },
+     {
+      "id": "713762354",
+      "name": "인생네컷 강남역1호점",
+      "distanceM": 567
+     }
+    ],
+    "score": {
+     "score": 90.4,
+     "metric": "national_percentile",
+     "light": "red",
+     "verdict": "포화 — 신규 진입 회피 권장",
+     "storesPer10kPop": 4.4,
+     "nationalTopPct": 9.6,
+     "densityPerKm2": 4.8,
+     "calibration": "n=250"
+    }
+   },
+   "byRadius": [
+    {
+     "radiusM": 500,
+     "count": 12,
+     "storesPer10kPop": 3.5,
+     "nationalTopPct": 8.7,
+     "light": "green"
+    },
+    {
+     "radiusM": 1000,
+     "count": 15,
+     "storesPer10kPop": 4.4,
+     "nationalTopPct": 9.6,
+     "light": "red"
+    },
+    {
+     "radiusM": 2000,
+     "count": 19,
+     "storesPer10kPop": 5.6,
+     "nationalTopPct": 17.8,
+     "light": "red"
+    },
+    {
+     "radiusM": 3000,
+     "count": 32,
+     "storesPer10kPop": 9.4,
+     "nationalTopPct": 21.6,
+     "light": "yellow"
+    }
+   ]
+  },
+  {
+   "category": "icecream",
+   "label": "무인아이스크림",
+   "measurable": true,
+   "primary": {
+    "category": "icecream",
+    "label": "무인아이스크림",
+    "measurable": true,
+    "count": 1,
+    "sample": [
+     "아이스크림24시할인점"
+    ],
+    "stores": [
+     {
+      "id": "998109175",
+      "name": "아이스크림24시할인점",
+      "distanceM": 987
+     }
+    ],
+    "score": {
+     "score": 48.6,
+     "metric": "national_percentile",
+     "light": "green",
+     "verdict": "여유 — 진입 검토 가능",
+     "storesPer10kPop": 0.3,
+     "nationalTopPct": 51.4,
+     "densityPerKm2": 0.3,
+     "calibration": "n=250"
+    }
+   },
+   "byRadius": [
+    {
+     "radiusM": 500,
+     "count": 0,
+     "storesPer10kPop": 0,
+     "nationalTopPct": 100,
+     "light": "green"
+    },
+    {
+     "radiusM": 1000,
+     "count": 1,
+     "storesPer10kPop": 0.3,
+     "nationalTopPct": 51.4,
+     "light": "green"
+    },
+    {
+     "radiusM": 2000,
+     "count": 8,
+     "storesPer10kPop": 2.3,
+     "nationalTopPct": 37.2,
+     "light": "yellow"
+    },
+    {
+     "radiusM": 3000,
+     "count": 0,
+     "storesPer10kPop": 0,
+     "nationalTopPct": 100,
+     "light": "green"
+    }
+   ]
+  },
+  {
+   "category": "convenience",
+   "label": "편의점(전체)",
+   "measurable": "proxy",
+   "note": "카카오 데이터에 '무인' 구분이 없어 무인만 골라낼 수 없습니다. 편의점 전체 밀도로 대체 표시합니다.",
+   "primary": {
+    "category": "convenience",
+    "label": "편의점(전체)",
+    "measurable": "proxy",
+    "note": "카카오 데이터에 '무인' 구분이 없어 무인만 골라낼 수 없습니다. 편의점 전체 밀도로 대체 표시합니다.",
+    "count": 148,
+    "sample": [
+     "이마트24 강남역점",
+     "GS25 강남본점",
+     "세븐일레븐 강남스퀘어점",
+     "CU 강남푸르지오점",
+     "GS25 강남프리미엄점",
+     "CU 뉴삼성전자본점"
+    ],
+    "stores": [
+     {
+      "id": "1274767874",
+      "name": "이마트24 강남역점",
+      "distanceM": 16
+     },
+     {
+      "id": "27498643",
+      "name": "GS25 강남본점",
+      "distanceM": 81
+     },
+     {
+      "id": "37304029",
+      "name": "세븐일레븐 강남스퀘어점",
+      "distanceM": 99
+     },
+     {
+      "id": "27062848",
+      "name": "CU 강남푸르지오점",
+      "distanceM": 123
+     },
+     {
+      "id": "234209705",
+      "name": "GS25 강남프리미엄점",
+      "distanceM": 182
+     },
+     {
+      "id": "1592679982",
+      "name": "CU 뉴삼성전자본점",
+      "distanceM": 187
+     },
+     {
+      "id": "12296281",
+      "name": "GS25 강남타운점",
+      "distanceM": 191
+     },
+     {
+      "id": "1093931949",
+      "name": "세븐일레븐 뉴강남센터점",
+      "distanceM": 198
+     },
+     {
+      "id": "17050663",
+      "name": "CU 역삼강남점",
+      "distanceM": 210
+     },
+     {
+      "id": "16502962",
+      "name": "CU 역삼우인점",
+      "distanceM": 210
+     },
+     {
+      "id": "7955515",
+      "name": "세븐일레븐 강남역TGI점",
+      "distanceM": 221
+     },
+     {
+      "id": "25757572",
+      "name": "GS25 역삼효성점",
+      "distanceM": 225
+     },
+     {
+      "id": "143879654",
+      "name": "세븐일레븐 역삼타워점",
+      "distanceM": 239
+     },
+     {
+      "id": "591777286",
+      "name": "CU 강남해커스점",
+      "distanceM": 247
+     },
+     {
+      "id": "692263091",
+      "name": "GS25 서초삼성타운점",
+      "distanceM": 253
+     },
+     {
+      "id": "12296836",
+      "name": "GS25 서초프라자점",
+      "distanceM": 257
+     },
+     {
+      "id": "1768547307",
+      "name": "세븐일레븐 삼성타운점",
+      "distanceM": 286
+     },
+     {
+      "id": "18117245",
+      "name": "세븐일레븐 역삼타운점",
+      "distanceM": 289
+     },
+     {
+      "id": "16765508",
+      "name": "CU 역삼디오빌점",
+      "distanceM": 295
+     },
+     {
+      "id": "7887096",
+      "name": "세븐일레븐 강남본점",
+      "distanceM": 309
+     },
+     {
+      "id": "17050498",
+      "name": "CU 오벨리스크점",
+      "distanceM": 318
+     },
+     {
+      "id": "479356065",
+      "name": "GS25 강남시티힐점",
+      "distanceM": 318
+     },
+     {
+      "id": "12296335",
+      "name": "GS25 강남쌍용점",
+      "distanceM": 318
+     },
+     {
+      "id": "1277982237",
+      "name": "CU 강남승리점",
+      "distanceM": 329
+     },
+     {
+      "id": "8686905",
+      "name": "CU 서초삼성타운점",
+      "distanceM": 351
+     },
+     {
+      "id": "1238417867",
+      "name": "CU 서초동아타워점",
+      "distanceM": 365
+     },
+     {
+      "id": "16557434",
+      "name": "CU 서초도씨에빛점",
+      "distanceM": 369
+     },
+     {
+      "id": "17056606",
+      "name": "GS25 강남태강점",
+      "distanceM": 387
+     },
+     {
+      "id": "16905013",
+      "name": "GS25 역삼태극점",
+      "distanceM": 399
+     },
+     {
+      "id": "20280080",
+      "name": "GS25 서초여신점",
+      "distanceM": 420
+     },
+     {
+      "id": "1444744871",
+      "name": "이마트24 역삼승리점",
+      "distanceM": 422
+     },
+     {
+      "id": "1932269123",
+      "name": "세븐일레븐 역삼만남점",
+      "distanceM": 435
+     },
+     {
+      "id": "7949987",
+      "name": "세븐일레븐 역삼8호점",
+      "distanceM": 442
+     },
+     {
+      "id": "16502957",
+      "name": "CU 역삼유토빌점",
+      "distanceM": 475
+     },
+     {
+      "id": "12296343",
+      "name": "GS25 역삼덕원점",
+      "distanceM": 483
+     },
+     {
+      "id": "12296458",
+      "name": "GS25 역삼쌍마점",
+      "distanceM": 489
+     },
+     {
+      "id": "1777752716",
+      "name": "GS25 역삼아워홈점",
+      "distanceM": 532
+     },
+     {
+      "id": "489244280",
+      "name": "GS25 역삼이담점",
+      "distanceM": 541
+     },
+     {
+      "id": "16906463",
+      "name": "CU 역삼포스틸점",
+      "distanceM": 563
+     },
+     {
+      "id": "191751692",
+      "name": "CU 역삼센타점",
+      "distanceM": 566
+     },
+     {
+      "id": "1284614872",
+      "name": "GS25 강남아트점",
+      "distanceM": 592
+     },
+     {
+      "id": "1391033447",
+      "name": "CU 역삼비엘점",
+      "distanceM": 626
+     },
+     {
+      "id": "154679258",
+      "name": "CU 서초써밋점",
+      "distanceM": 647
+     },
+     {
+      "id": "9621216",
+      "name": "CU 서초유앤아이점",
+      "distanceM": 681
+     },
+     {
+      "id": "16932811",
+      "name": "CU 역삼본점",
+      "distanceM": 692
+     }
+    ],
+    "score": {
+     "score": 84.9,
+     "metric": "national_percentile",
+     "light": "red",
+     "verdict": "포화 — 신규 진입 회피 권장",
+     "storesPer10kPop": 43.3,
+     "nationalTopPct": 15.1,
+     "densityPerKm2": 47.1,
+     "calibration": "n=250"
+    }
+   },
+   "byRadius": [
+    {
+     "radiusM": 500,
+     "count": 52,
+     "storesPer10kPop": 15.2,
+     "nationalTopPct": 11.5,
+     "light": "red"
+    },
+    {
+     "radiusM": 1000,
+     "count": 148,
+     "storesPer10kPop": 43.3,
+     "nationalTopPct": 15.1,
+     "light": "red"
+    },
+    {
+     "radiusM": 2000,
+     "count": 440,
+     "storesPer10kPop": 128.6,
+     "nationalTopPct": 18.2,
+     "light": "red"
+    },
+    {
+     "radiusM": 3000,
+     "count": 783,
+     "storesPer10kPop": 228.9,
+     "nationalTopPct": 19.7,
+     "light": "red"
+    }
+   ]
+  }
+ ],
+ "summary": "역삼1동 기준으로 스터디카페, 무인사진관, 편의점(전체)은(는) 포화 상태(빨강)로, 신규 진입 위험이 높습니다. 무인아이스크림은(는) 상대적으로 여유(초록)가 있어 검토 여지가 있습니다. 가장 주의가 필요한 업종은 스터디카페입니다.",
+ "conclusions": [
+  {
+   "category": "studycafe",
+   "text": "스터디카페은(는) 반경 1km 안에 38곳이 밀집해 있어 전국 행정동 대비 상위 9.2% 수준의 포화(빨강) 상권입니다. 신규 진입 시 기존 매장과의 직접 경쟁이 불가피하므로, 확실한 입지·가격·서비스 차별화 없이는 진입을 권하지 않습니다. 반경별로 보면 500m·1km 구간에서 포화(빨강)로 나타나, 상권을 넓게 볼수록 경쟁이 짙어집니다."
+  },
+  {
+   "category": "laundry",
+   "text": "코인빨래방은(는) 반경 1km 안에 16곳으로 전국 상위 25.2% 수준의 주의(노랑) 상권입니다. 이미 경쟁이 형성되어 있어, 차별화 포인트(운영 시간·회원 관리·부가 서비스 등)를 확보한다는 전제에서만 검토할 만합니다."
+  },
+  {
+   "category": "photobooth",
+   "text": "무인사진관은(는) 반경 1km 안에 15곳이 밀집해 있어 전국 행정동 대비 상위 9.6% 수준의 포화(빨강) 상권입니다. 신규 진입 시 기존 매장과의 직접 경쟁이 불가피하므로, 확실한 입지·가격·서비스 차별화 없이는 진입을 권하지 않습니다. 반경별로 보면 1km·2km 구간에서 포화(빨강)로 나타나, 상권을 넓게 볼수록 경쟁이 짙어집니다."
+  },
+  {
+   "category": "icecream",
+   "text": "무인아이스크림은(는) 반경 1km 안에 1곳으로 전국 상위 51.4% 수준의 여유(초록) 상권입니다. 경쟁 밀도가 낮아 신규 진입을 검토할 여지가 있으나, 매장 수가 적은 것이 수요 부족 때문일 수 있으니 배후 수요를 별도로 확인하세요."
+  },
+  {
+   "category": "convenience",
+   "text": "편의점(전체)은(는) 반경 1km 안에 148곳이 밀집해 있어 전국 행정동 대비 상위 15.1% 수준의 포화(빨강) 상권입니다. 신규 진입 시 기존 매장과의 직접 경쟁이 불가피하므로, 확실한 입지·가격·서비스 차별화 없이는 진입을 권하지 않습니다. 반경별로 보면 500m·1km·2km·3km 구간에서 포화(빨강)로 나타나, 상권을 넓게 볼수록 경쟁이 짙어집니다."
+  }
+ ],
+ "sampleAsOf": "2026-07-01"
+}

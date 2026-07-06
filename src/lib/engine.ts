@@ -138,6 +138,13 @@ async function searchPage(
   return kakao(path, params);
 }
 
+// 반경 내 매장 1건 — 이름 + 진단 중심으로부터의 거리(m).
+export interface Store {
+  id: string;
+  name: string;
+  distanceM: number | null; // 카카오 documents.distance (검색 중심 x,y 기준)
+}
+
 // 키워드 검색 → category_name 필터로 매장 수집(중복제거). 카카오 페이지 상한 45.
 async function collectFiltered(
   query: string | null,
@@ -146,18 +153,23 @@ async function collectFiltered(
   y: string,
   radius: number,
   keepCategory: string[],
-): Promise<Map<string, string>> {
-  const ids = new Map<string, string>();
+): Promise<Map<string, Store>> {
+  const stores = new Map<string, Store>();
   for (let page = 1; page <= 3; page++) {
     const d = await searchPage(query, categoryCode, x, y, radius, page);
     for (const doc of d.documents || []) {
       const cn: string = doc.category_name || "";
       if (keepCategory.length && !keepCategory.some((k) => cn.includes(k))) continue;
-      ids.set(doc.id, doc.place_name || "");
+      const dist = doc.distance !== undefined && doc.distance !== "" ? Number(doc.distance) : null;
+      stores.set(doc.id, {
+        id: doc.id,
+        name: doc.place_name || "",
+        distanceM: Number.isFinite(dist as number) ? (dist as number) : null,
+      });
     }
     if (d.meta?.is_end ?? true) break;
   }
-  return ids;
+  return stores;
 }
 
 export interface CategoryResult {
@@ -167,6 +179,8 @@ export interface CategoryResult {
   note?: string;
   count: number | null;
   sample: string[];
+  // 상세 리포트용 — 반경 내 경쟁 매장 전체(최대 45, 거리 오름차순). 무료 응답엔 미포함.
+  stores?: Store[];
   score?: ScoreResult;
 }
 
@@ -175,6 +189,7 @@ export async function collectCompetitors(
   x: string,
   y: string,
   radius: number,
+  withStores = false, // true면 stores(전체 리스트, 거리 포함) 채움 — 상세 리포트용
 ): Promise<CategoryResult> {
   if (def.measurable === false) {
     return {
@@ -186,21 +201,36 @@ export async function collectCompetitors(
       sample: [],
     };
   }
-  const merged = new Map<string, string>();
+  const merged = new Map<string, Store>();
   let catTotal: number | null = null;
 
   if (def.categoryCode) {
-    // 편의점(CS2): 카테고리코드=필터(오탐 없음) → total_count가 정확(45 초과 포함).
-    const d = await searchPage(null, def.categoryCode, x, y, radius, 1);
-    catTotal = d.meta?.total_count ?? 0;
-    for (const doc of d.documents || []) merged.set(doc.id, doc.place_name || "");
+    // 편의점(CS2): 카테고리코드=필터(오탐 없음). total_count는 정확(45 초과 포함).
+    // 리스트는 페이지네이션으로 최대 45개까지 수집(거리 포함).
+    for (let page = 1; page <= 3; page++) {
+      const d = await searchPage(null, def.categoryCode, x, y, radius, page);
+      if (page === 1) catTotal = d.meta?.total_count ?? 0;
+      for (const doc of d.documents || []) {
+        const dist =
+          doc.distance !== undefined && doc.distance !== "" ? Number(doc.distance) : null;
+        merged.set(doc.id, {
+          id: doc.id,
+          name: doc.place_name || "",
+          distanceM: Number.isFinite(dist as number) ? (dist as number) : null,
+        });
+      }
+      if (d.meta?.is_end ?? true) break;
+    }
   }
   for (const kw of def.keywords) {
-    const ids = await collectFiltered(kw, null, x, y, radius, def.keepCategory);
-    ids.forEach((v, k) => merged.set(k, v));
+    const found = await collectFiltered(kw, null, x, y, radius, def.keepCategory);
+    found.forEach((v, k) => merged.set(k, v));
   }
 
   const count = catTotal !== null ? catTotal : merged.size;
+  const storeList = Array.from(merged.values()).sort(
+    (a, b) => (a.distanceM ?? Infinity) - (b.distanceM ?? Infinity),
+  );
 
   return {
     category: def.key,
@@ -208,7 +238,8 @@ export async function collectCompetitors(
     measurable: def.measurable,
     note: def.note,
     count,
-    sample: Array.from(merged.values()).slice(0, 6),
+    sample: storeList.slice(0, 6).map((s) => s.name),
+    ...(withStores ? { stores: storeList } : {}),
   };
 }
 
@@ -294,6 +325,7 @@ export async function diagnose(
   address: string,
   catKeys: string[],
   radius = 1000,
+  withStores = false,
 ): Promise<Diagnosis> {
   const geo = await geocode(address);
   if (!geo) {
@@ -314,7 +346,7 @@ export async function diagnose(
   for (const key of catKeys) {
     const def = CATEGORY_MAP[key];
     if (!def) continue;
-    const comp = await collectCompetitors(def, geo.x, geo.y, radius);
+    const comp = await collectCompetitors(def, geo.x, geo.y, radius, withStores);
     if (comp.count !== null) {
       comp.score = saturationScore(comp.count, radius, popinfo ? popinfo.pop : null, key);
     }
@@ -334,5 +366,122 @@ export async function diagnose(
     radiusM: radius,
     mode,
     results,
+  };
+}
+
+// ── 상세 리포트 전용: 4개 반경 비교 ─────────────────────────────
+export const REPORT_RADII = [500, 1000, 2000, 3000] as const;
+
+export interface RadiusRow {
+  radiusM: number;
+  count: number | null;
+  storesPer10kPop?: number;
+  nationalTopPct?: number;
+  light: "green" | "yellow" | "red" | null;
+}
+
+export interface CategoryReport {
+  category: string;
+  label: string;
+  measurable: Measurable;
+  note?: string;
+  // 사용자가 선택한 반경 기준 상세(전체 매장 리스트 포함)
+  primary: CategoryResult;
+  // 4개 반경 비교 행
+  byRadius: RadiusRow[];
+}
+
+export interface DetailedReport {
+  ok: boolean;
+  error?: string;
+  addressInput: string;
+  addressNorm?: string;
+  region?: Region | null;
+  population?: { pop: number; sede: number } | null;
+  radiusM: number;
+  mode: string;
+  generatedAt: string;
+  categories: CategoryReport[];
+}
+
+// 반경 4개 × 업종 루프. 카카오 호출이 많아 무료 진단과 분리(유료 게이트 뒤에서만 호출).
+export async function detailedReport(
+  address: string,
+  catKeys: string[],
+  radius = 1000,
+): Promise<DetailedReport> {
+  const geo = await geocode(address);
+  if (!geo) {
+    return {
+      ok: false,
+      error: "주소를 찾을 수 없습니다.",
+      addressInput: address,
+      radiusM: radius,
+      mode: "",
+      generatedAt: new Date().toISOString(),
+      categories: [],
+    };
+  }
+  const region = await regionOf(geo.x, geo.y);
+  const popRow = region ? POPULATION[region.code] : undefined;
+  const popinfo = popRow ? { pop: popRow[0], sede: popRow[1] } : null;
+  const pop = popinfo ? popinfo.pop : null;
+
+  const categories: CategoryReport[] = [];
+  for (const key of catKeys) {
+    const def = CATEGORY_MAP[key];
+    if (!def) continue;
+
+    // 선택 반경 기준 상세(매장 전체 리스트 포함)
+    const primary = await collectCompetitors(def, geo.x, geo.y, radius, true);
+    if (primary.count !== null) {
+      primary.score = saturationScore(primary.count, radius, pop, key);
+    }
+
+    // 4개 반경 비교
+    const byRadius: RadiusRow[] = [];
+    for (const r of REPORT_RADII) {
+      if (def.measurable === false) {
+        byRadius.push({ radiusM: r, count: null, light: null });
+        continue;
+      }
+      // 선택 반경은 이미 계산한 값 재사용(카카오 호출 절약)
+      const comp =
+        r === radius ? primary : await collectCompetitors(def, geo.x, geo.y, r, false);
+      const score =
+        comp.count !== null ? saturationScore(comp.count, r, pop, key) : undefined;
+      byRadius.push({
+        radiusM: r,
+        count: comp.count,
+        storesPer10kPop: score?.storesPer10kPop,
+        nationalTopPct: score?.nationalTopPct,
+        light: score?.light ?? null,
+      });
+    }
+
+    categories.push({
+      category: def.key,
+      label: def.label,
+      measurable: def.measurable,
+      note: def.note,
+      primary,
+      byRadius,
+    });
+  }
+
+  const mode = popinfo
+    ? `인구 정규화 ON · 중심 행정동 ${region?.dong} 인구 ${popinfo.pop.toLocaleString()}명 / ${popinfo.sede.toLocaleString()}세대`
+    : "density-only · 행정동 인구 미매칭";
+
+  return {
+    ok: true,
+    addressInput: address,
+    addressNorm: geo.norm,
+    region,
+    population: popinfo,
+    radiusM: radius,
+    mode,
+    generatedAt: new Date().toISOString(),
+    categories,
   };
 }
