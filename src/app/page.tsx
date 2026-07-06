@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/categories";
 import { coupangItemsFor, coupangSearchLink, COUPANG_DISCLOSURE } from "@/lib/coupang";
+import CoupangDynamicBanner from "@/components/CoupangDynamicBanner";
 
 interface ScoreResult {
   score: number;
@@ -298,6 +299,7 @@ export default function Home() {
                       </a>
                     ))}
                   </div>
+                  <CoupangDynamicBanner />
                   <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
                     {COUPANG_DISCLOSURE}
                   </p>
