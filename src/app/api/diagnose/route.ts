@@ -28,12 +28,6 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  if (!process.env.KAKAO_REST_KEY) {
-    return NextResponse.json(
-      { ok: false, error: "서버에 KAKAO_REST_KEY가 설정되지 않았습니다." },
-      { status: 500 },
-    );
-  }
 
   try {
     const result = await diagnose(address, categories, radius);

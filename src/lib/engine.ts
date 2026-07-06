@@ -52,7 +52,8 @@ function percentileOf(v: number, breakpoints: Record<string, number>): number {
   return 100;
 }
 
-const KEY = process.env.KAKAO_REST_KEY || "";
+// Vercel 환경변수 우선, 없으면 fallback(Private 레포). 나중에 env로 옮기고 이 기본값 제거 권장.
+const KEY = process.env.KAKAO_REST_KEY || "1d26b6e9dffe6908aabcf78aaab683f4";
 const BASE = "https://dapi.kakao.com/v2/local";
 
 async function kakao(path: string, params: Record<string, string | number>) {
