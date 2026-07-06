@@ -295,7 +295,21 @@ export default function ReportView({
       })}
 
       {/* 서울 프리미엄: 상권 정보 + 카드매출 추정 + 예상수익 시뮬레이터 */}
-      {data.seoul && <SeoulPremiumSection premium={data.seoul} />}
+      {data.seoul ? (
+        <SeoulPremiumSection premium={data.seoul} />
+      ) : (
+        <section className="report-block rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <h2 className="text-base font-bold text-slate-700">
+            상권 유동인구·카드매출 분석 — 서울 지역 한정
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-500">
+            유동인구 반영 점수, 상권별 카드매출 추정(점포당 월매출), 예상수익 시뮬레이터는
+            서울시 상권분석 공공데이터 기반이라 <b>서울 주소 진단에서만</b> 제공됩니다. 진단
+            위치가 서울 외 지역이어서 이 섹션이 표시되지 않았습니다. 수도권·전국 확장은 해당
+            공공데이터가 공개되는 대로 반영할 예정입니다.
+          </p>
+        </section>
+      )}
 
       {/* 쿠팡 파트너스 맥락 링크 — 인쇄 시 숨김, 예시 페이지엔 미노출 */}
       {coupang.length > 0 && (
