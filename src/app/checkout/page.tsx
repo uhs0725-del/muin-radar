@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
 import { PRICES, ORDER_NAMES, makeOrderId } from "@/lib/pricing";
 
@@ -110,7 +111,15 @@ function CheckoutInner() {
             : "결제 수단 불러오는 중…"}
       </button>
 
-      <p className="mt-3 text-center text-xs text-slate-400">
+      <p className="mt-3 text-center text-xs leading-relaxed text-slate-400">
+        결제 후 7일 이내이고 유료 기능(상세 리포트 열람·무제한 진단) 사용 개시 전이면 전액 환불됩니다.
+        자세한 내용은{" "}
+        <Link href="/refund" className="underline hover:text-slate-600">
+          환불규정
+        </Link>{" "}
+        참조.
+      </p>
+      <p className="mt-2 text-center text-xs text-slate-400">
         테스트 모드입니다 · 실제 금액이 청구되지 않습니다
       </p>
     </main>
