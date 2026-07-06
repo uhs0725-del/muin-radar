@@ -3,6 +3,7 @@
 // 상세 리포트 렌더 — 실물(/report)과 예시(/report/sample)가 동일 컴포넌트를 공유.
 import { useState } from "react";
 import { coupangItemsFor, coupangSearchLink, COUPANG_DISCLOSURE } from "@/lib/coupang";
+import { estimateMonthlyRent } from "@/lib/rent";
 
 export interface Store {
   id: string;
@@ -72,12 +73,21 @@ export interface SeoulCatDetail {
   perStoreMonthlyAmt?: number;
   franchise?: number;
   openRate?: number;
+  closeRate?: number;
   salesAsOf?: string;
   storesAsOf?: string;
+  trend?: { quarter: string; amt: number }[];
+  yoyPct?: number | null;
 }
 export interface SeoulPremium {
   trdar: SeoulTrdarInfo;
   categories: SeoulCatDetail[];
+}
+export interface RentInfo {
+  region: string;
+  perM2ThousandWon: number;
+  nationwide: number;
+  asOf: string;
 }
 
 export interface ReportData {
@@ -95,6 +105,7 @@ export interface ReportData {
   conclusions?: { category: string; text: string }[];
   sampleAsOf?: string;
   seoul?: SeoulPremium | null;
+  rent?: RentInfo | null;
 }
 
 const LIGHT_DOT: Record<string, string> = {
@@ -294,9 +305,12 @@ export default function ReportView({
         );
       })}
 
+      {/* 월세 가늠 (전국 공통) */}
+      {data.rent && <RentSection rent={data.rent} regionSi={data.region?.si} />}
+
       {/* 서울 프리미엄: 상권 정보 + 카드매출 추정 + 예상수익 시뮬레이터 */}
       {data.seoul ? (
-        <SeoulPremiumSection premium={data.seoul} />
+        <SeoulPremiumSection premium={data.seoul} rent={data.rent ?? null} />
       ) : (
         <section className="report-block rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <h2 className="text-base font-bold text-slate-700">
@@ -367,8 +381,142 @@ function won(n: number): string {
   return `${Math.round(n).toLocaleString()}원`;
 }
 
+// 분기 코드(20261) → 표기(26.1Q)
+function qLabel(q: string): string {
+  return `${q.slice(2, 4)}.${q.slice(4)}Q`;
+}
+
+// 분기 매출 추이 — 순수 SVG/CSS 막대 스파크라인(라이브러리 없음). 상권×업종 카드매출.
+function SalesTrend({
+  trend,
+  yoyPct,
+}: {
+  trend: { quarter: string; amt: number }[];
+  yoyPct: number | null;
+}) {
+  const max = Math.max(...trend.map((t) => t.amt), 1);
+  const W = 100;
+  const H = 36;
+  const gap = 2;
+  const bw = (W - gap * (trend.length - 1)) / trend.length;
+  const last = trend[trend.length - 1];
+  return (
+    <div className="mt-3">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold text-slate-500">분기 카드매출 추이</span>
+        {yoyPct !== null && (
+          <span
+            className={`text-xs font-semibold ${yoyPct >= 0 ? "text-emerald-600" : "text-red-600"}`}
+          >
+            전년동기 {yoyPct >= 0 ? "▲" : "▼"} {Math.abs(yoyPct)}%
+          </span>
+        )}
+      </div>
+      <div className="mt-1.5 flex items-end gap-3">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="h-10 w-40 shrink-0"
+          preserveAspectRatio="none"
+          role="img"
+          aria-label="분기별 카드매출 막대 그래프"
+        >
+          {trend.map((t, i) => {
+            const h = Math.max((t.amt / max) * H, 1);
+            const isLast = i === trend.length - 1;
+            return (
+              <rect
+                key={t.quarter}
+                x={i * (bw + gap)}
+                y={H - h}
+                width={bw}
+                height={h}
+                rx={0.6}
+                className={isLast ? "fill-indigo-600" : "fill-indigo-300"}
+              />
+            );
+          })}
+        </svg>
+        <div className="text-[11px] leading-tight text-slate-400">
+          {qLabel(trend[0].quarter)} → {qLabel(last.quarter)} · {trend.length}분기
+          <br />
+          최신 {won(last.amt * 10000)}
+        </div>
+      </div>
+      <p className="mt-1 text-[10px] text-slate-400">
+        분기 카드매출 추정 추이 — 상권 단위이며 점포수 변화 미반영.
+      </p>
+    </div>
+  );
+}
+
+// ── 월세 가늠 섹션 (전국 공통) ─────────────────────────────────────
+const PYEONGS = [10, 15, 20, 30];
+
+function RentSection({ rent, regionSi }: { rent: RentInfo; regionSi?: string }) {
+  // 시세로 채우기: 20평 기준 월세를 시뮬레이터에 반영하려면 이벤트로 전달(선택 반경 시뮬레이터가 없을 수 있어 안내만).
+  const perM2 = rent.perM2ThousandWon; // 천원/㎡
+  const region = regionSi || rent.region;
+  return (
+    <section className="report-block mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white">
+      <div className="flex items-center gap-2">
+        <span className="rounded bg-slate-700 px-2 py-0.5 text-xs font-bold text-white">
+          월세 가늠
+        </span>
+        <h2 className="text-lg font-bold text-slate-900">소규모상가 임대료 시세</h2>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+        <Info label="지역" value={rent.region} />
+        <Info label="㎡당 월임대료" value={`${perM2.toLocaleString()}천원`} />
+        <Info label="전국 평균" value={`${rent.nationwide.toLocaleString()}천원/㎡`} />
+      </div>
+
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-slate-300 text-left text-xs text-slate-500">
+              <th className="py-1.5 pr-2 font-medium">평형</th>
+              <th className="py-1.5 pr-2 font-medium">전용면적(㎡)</th>
+              <th className="py-1.5 font-medium">추정 월세</th>
+            </tr>
+          </thead>
+          <tbody>
+            {PYEONGS.map((p) => {
+              const m2 = Math.round(p * 3.305785);
+              const monthly = estimateMonthlyRent(perM2, p);
+              return (
+                <tr
+                  key={p}
+                  className={`border-b border-slate-100 ${p === 20 ? "font-semibold" : ""}`}
+                >
+                  <td className="py-1.5 pr-2">
+                    {p}평{p === 20 && <span className="ml-1 text-xs text-slate-400">(기준)</span>}
+                  </td>
+                  <td className="py-1.5 pr-2 text-slate-500">{m2}㎡</td>
+                  <td className="py-1.5">{won(monthly)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+        {region} 소규모상가 ㎡당 월임대료(전용+공용) × 평형 면적으로 산출한 추정치입니다. 지역
+        평균 시세이며 개별 매물 조건(층/위치/권리금)에 따라 크게 다릅니다. 출처: 한국부동산원
+        상업용부동산 임대동향조사(소규모상가, {rent.asOf.slice(2, 4)}년 {rent.asOf.slice(4)}분기).
+      </p>
+    </section>
+  );
+}
+
 // ── 서울 프리미엄 섹션 ───────────────────────────────────────────
-function SeoulPremiumSection({ premium }: { premium: SeoulPremium }) {
+function SeoulPremiumSection({
+  premium,
+  rent,
+}: {
+  premium: SeoulPremium;
+  rent: RentInfo | null;
+}) {
   const { trdar, categories } = premium;
   const withSales = categories.filter((c) => c.hasSales);
   return (
@@ -431,8 +579,17 @@ function SeoulPremiumSection({ premium }: { premium: SeoulPremium }) {
                   <Info label="점포당 월 추정매출" value={won(c.perStoreMonthlyAmt ?? 0)} />
                   <Info label="상권 분기 매출" value={won(c.quarterSalesAmt ?? 0)} />
                   <Info label="점포수" value={`${(c.stores ?? 0).toLocaleString()}곳`} />
-                  <Info label="개업률" value={`${c.openRate ?? 0}%`} />
+                  <Info
+                    label="개업률 / 폐업률"
+                    value={`${c.openRate ?? 0}% / ${c.closeRate ?? "-"}${c.closeRate !== undefined ? "%" : ""}`}
+                  />
                 </div>
+
+                {/* 분기 매출 추이 스파크라인 */}
+                {c.trend && c.trend.length >= 2 && (
+                  <SalesTrend trend={c.trend} yoyPct={c.yoyPct ?? null} />
+                )}
+
                 <p className="mt-2 text-[11px] text-slate-400">
                   점포당 월 추정매출 = 상권 분기 카드매출 ÷ 점포수 ÷ 3. 분기 결제 건수{" "}
                   {(c.salesCnt ?? 0).toLocaleString()}건 · 매출 {c.salesAsOf} / 점포 {c.storesAsOf}{" "}
@@ -460,7 +617,7 @@ function SeoulPremiumSection({ premium }: { premium: SeoulPremium }) {
       )}
 
       {/* 예상수익 시뮬레이터 */}
-      <RevenueSimulator categories={withSales} />
+      <RevenueSimulator categories={withSales} rent={rent} />
 
       {/* 면책 */}
       <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
@@ -473,11 +630,21 @@ function SeoulPremiumSection({ premium }: { premium: SeoulPremium }) {
 }
 
 // 예상수익 시뮬레이터 — 클라이언트 계산. 매출 프리필(점포당 월 추정매출) + 입력.
-function RevenueSimulator({ categories }: { categories: SeoulCatDetail[] }) {
+function RevenueSimulator({
+  categories,
+  rent: rentInfo,
+}: {
+  categories: SeoulCatDetail[];
+  rent: RentInfo | null;
+}) {
   const prefill = categories.find((c) => (c.perStoreMonthlyAmt ?? 0) > 0);
   const [revenue, setRevenue] = useState<number>(
     prefill?.perStoreMonthlyAmt ? Math.round(prefill.perStoreMonthlyAmt / 10000) : 0,
   ); // 만원 단위
+  // 20평 기준 월세 시세(만원). 시세로 채우기 버튼용.
+  const rentFill20 = rentInfo
+    ? Math.round(estimateMonthlyRent(rentInfo.perM2ThousandWon, 20) / 10000)
+    : null;
   const [rent, setRent] = useState<number>(150); // 만원
   const [costPct, setCostPct] = useState<number>(35); // 관리·재료비율 %
   const [invest, setInvest] = useState<number>(5000); // 초기투자 만원
@@ -498,6 +665,15 @@ function RevenueSimulator({ categories }: { categories: SeoulCatDetail[] }) {
           : "월 매출 등을 입력하면 손익을 계산합니다."}{" "}
         무인 특성상 인건비는 0으로 가정합니다.
       </p>
+      {rentFill20 !== null && (
+        <button
+          type="button"
+          onClick={() => setRent(rentFill20)}
+          className="no-print mt-3 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-500"
+        >
+          월세 시세로 채우기 (20평 기준 {rentFill20.toLocaleString()}만원)
+        </button>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SimInput label="월 매출(만원)" value={revenue} onChange={setRevenue} />
         <SimInput label="월세(만원)" value={rent} onChange={setRent} />

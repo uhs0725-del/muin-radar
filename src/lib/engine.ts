@@ -11,10 +11,12 @@ import {
   flpopOf,
   salesOf,
   storesOf,
+  salesTrendOf,
   SEOUL_INDUSTY,
   SEOUL_ASOF,
   type SeoulMatch,
 } from "./seoul";
+import { rentForSi, type RentInfo } from "./rent";
 
 const POPULATION = populationRaw as unknown as Record<string, [number, number]>; // code -> [pop, sede]
 
@@ -531,8 +533,12 @@ export interface SeoulCatDetail {
   perStoreMonthlyAmt?: number; // 점포당 월 추정매출(시뮬레이터 프리필)
   franchise?: number;
   openRate?: number; // 개업률(%)
+  closeRate?: number; // 폐업률(%)
   salesAsOf?: string;
   storesAsOf?: string;
+  // 분기 매출 추이(최근 8분기, 상권×업종 카드매출 만원). 스파크라인용.
+  trend?: { quarter: string; amt: number }[];
+  yoyPct?: number | null; // 전년동기 대비 상권 매출 증감%(최신 vs 4분기 전)
 }
 export interface SeoulPremium {
   trdar: SeoulTrdarInfo;
@@ -551,6 +557,7 @@ export interface DetailedReport {
   generatedAt: string;
   categories: CategoryReport[];
   seoul?: SeoulPremium | null; // 서울이면 채워짐
+  rent?: RentInfo | null; // 소규모상가 시도 평균 임대료(전국 공통)
 }
 
 // 반경 4개 × 업종 루프. 카카오 호출이 많아 무료 진단과 분리(유료 게이트 뒤에서만 호출).
@@ -623,6 +630,9 @@ export async function detailedReport(
   // 서울 프리미엄 섹션(카드매출/점포/유동인구)
   const seoulPremium = seoulMatch ? buildSeoulPremium(seoulMatch, catKeys) : null;
 
+  // 월세 가늠(전국 공통) — 소규모상가 시도 평균 임대료
+  const rent = region ? rentForSi(region.si) : null;
+
   const seoulSuffix = seoulMatch
     ? ` · 서울 상권: ${seoulMatch.name}(${seoulMatch.distanceM}m) · 유동인구 반영 ON`
     : "";
@@ -641,6 +651,7 @@ export async function detailedReport(
     generatedAt: new Date().toISOString(),
     categories,
     seoul: seoulPremium,
+    rent,
   };
 }
 
@@ -695,6 +706,14 @@ function buildSeoulPremium(match: SeoulMatch, catKeys: string[]): SeoulPremium {
     const stores = store?.stores ?? 0;
     const qAmt = sale?.amt ?? 0;
     const perStoreQ = stores > 0 ? Math.round(qAmt / stores) : 0;
+    // 분기 매출 추이(최근 8분기, 만원 단위) + 전년동기 대비(최신 vs 4분기 전)
+    const trend = salesTrendOf(match.trdarCd, key, 8);
+    let yoyPct: number | null = null;
+    if (trend.length >= 5) {
+      const latest = trend[trend.length - 1].amt;
+      const yearAgo = trend[trend.length - 5].amt; // 4분기 전 = 전년 동분기
+      if (yearAgo > 0) yoyPct = Math.round(((latest - yearAgo) / yearAgo) * 1000) / 10;
+    }
     cats.push({
       category: key,
       label: def.label,
@@ -709,8 +728,11 @@ function buildSeoulPremium(match: SeoulMatch, catKeys: string[]): SeoulPremium {
       perStoreMonthlyAmt: Math.round(perStoreQ / 3),
       franchise: store?.franchise ?? 0,
       openRate: store?.openRate ?? 0,
+      closeRate: store?.closeRate,
       salesAsOf: SEOUL_ASOF.sales,
       storesAsOf: SEOUL_ASOF.stores,
+      trend,
+      yoyPct,
     });
   }
   return { trdar, categories: cats };

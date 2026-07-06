@@ -9,6 +9,7 @@ import trdarRaw from "@/data/seoul_trdar.json";
 import flpopRaw from "@/data/seoul_flpop.json";
 import salesRaw from "@/data/seoul_sales.json";
 import storesRaw from "@/data/seoul_stores.json";
+import salesTrendRaw from "@/data/seoul_sales_trend.json";
 
 interface TrdarEntry {
   name: string;
@@ -37,17 +38,24 @@ interface StoreEntry {
   stores: number;
   franchise: number;
   openRate: number;
+  closeRate?: number;
 }
+// 분기 시계열: {TRDAR_CD: {업종코드: {분기: 카드매출 만원}}}
+type TrendTrdar = Record<string, Record<string, number>>;
 
 const TRDAR = trdarRaw as unknown as Record<string, TrdarEntry | string>;
 const FLPOP = flpopRaw as unknown as Record<string, FlpopEntry | string>;
 const SALES = salesRaw as unknown as Record<string, Record<string, SalesEntry> | string>;
 const STORES = storesRaw as unknown as Record<string, Record<string, StoreEntry> | string>;
+const SALES_TREND = salesTrendRaw as unknown as Record<string, TrendTrdar | string | string[]>;
+export const SEOUL_TREND_QUARTERS = ((salesTrendRaw as unknown as Record<string, string[]>)
+  ._quarters ?? []) as string[];
 
 export const SEOUL_ASOF = {
   flpop: (flpopRaw as unknown as Record<string, string>)._asOf ?? "",
   sales: (salesRaw as unknown as Record<string, string>)._asOf ?? "",
   stores: (storesRaw as unknown as Record<string, string>)._asOf ?? "",
+  trend: (salesTrendRaw as unknown as Record<string, string>)._asOf ?? "",
 };
 
 // 무인업종 → 서울 62종 업종코드 매핑(확정). fetch_seoul.py와 동일.
@@ -178,4 +186,28 @@ export function storesOf(trdarCd: string, catKey: string): StoreEntry | null {
   const row = STORES[trdarCd];
   if (!row || typeof row === "string") return null;
   return row[ind.code] ?? null;
+}
+
+/**
+ * 분기 매출 시계열(최근 n분기). 반환: [{quarter, amt(만원)}] 오름차순.
+ * 데이터 없으면 빈 배열.
+ */
+export function salesTrendOf(
+  trdarCd: string,
+  catKey: string,
+  lastN = 8,
+): { quarter: string; amt: number }[] {
+  const ind = SEOUL_INDUSTY[catKey];
+  if (!ind || !ind.code) return [];
+  const row = SALES_TREND[trdarCd];
+  if (!row || typeof row === "string" || Array.isArray(row)) return [];
+  const series = row[ind.code];
+  if (!series) return [];
+  const quarters = SEOUL_TREND_QUARTERS.length
+    ? SEOUL_TREND_QUARTERS
+    : Object.keys(series).sort();
+  const recent = quarters.slice(-lastN);
+  return recent
+    .filter((q) => series[q] !== undefined)
+    .map((q) => ({ quarter: q, amt: series[q] }));
 }

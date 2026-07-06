@@ -15,7 +15,7 @@
  },
  "radiusM": 1000,
  "mode": "인구 정규화 ON · 중심 행정동 역삼1동 인구 34,205명 / 23,851세대 · 서울 상권: 강남역(253m) · 유동인구 반영 ON",
- "generatedAt": "2026-07-06T14:39:26.803Z",
+ "generatedAt": "2026-07-06T15:15:10.263Z",
  "categories": [
   {
    "category": "studycafe",
@@ -972,8 +972,44 @@
     "perStoreMonthlyAmt": 15154089,
     "franchise": 2,
     "openRate": 0,
+    "closeRate": 0,
     "salesAsOf": "20261",
-    "storesAsOf": "20261"
+    "storesAsOf": "20261",
+    "trend": [
+     {
+      "quarter": "20242",
+      "amt": 85668
+     },
+     {
+      "quarter": "20243",
+      "amt": 80014
+     },
+     {
+      "quarter": "20244",
+      "amt": 70930
+     },
+     {
+      "quarter": "20251",
+      "amt": 84481
+     },
+     {
+      "quarter": "20252",
+      "amt": 83611
+     },
+     {
+      "quarter": "20253",
+      "amt": 68864
+     },
+     {
+      "quarter": "20254",
+      "amt": 82444
+     },
+     {
+      "quarter": "20261",
+      "amt": 59101
+     }
+    ],
+    "yoyPct": -30
    },
    {
     "category": "photobooth",
@@ -1003,10 +1039,52 @@
     "perStoreMonthlyAmt": 332206857,
     "franchise": 45,
     "openRate": 2,
+    "closeRate": 3,
     "salesAsOf": "20261",
-    "storesAsOf": "20261"
+    "storesAsOf": "20261",
+    "trend": [
+     {
+      "quarter": "20242",
+      "amt": 1932088
+     },
+     {
+      "quarter": "20243",
+      "amt": 1966684
+     },
+     {
+      "quarter": "20244",
+      "amt": 1837465
+     },
+     {
+      "quarter": "20251",
+      "amt": 1619783
+     },
+     {
+      "quarter": "20252",
+      "amt": 1742919
+     },
+     {
+      "quarter": "20253",
+      "amt": 2033490
+     },
+     {
+      "quarter": "20254",
+      "amt": 1841882
+     },
+     {
+      "quarter": "20261",
+      "amt": 1694255
+     }
+    ],
+    "yoyPct": 4.6
    }
   ]
+ },
+ "rent": {
+  "region": "서울",
+  "perM2ThousandWon": 52.5,
+  "nationwide": 20.6,
+  "asOf": "20261"
  },
  "summary": "역삼1동 기준으로 스터디카페, 무인사진관, 편의점(전체)은(는) 포화 상태(빨강)로, 신규 진입 위험이 높습니다. 무인아이스크림은(는) 상대적으로 여유(초록)가 있어 검토 여지가 있습니다. 가장 주의가 필요한 업종은 스터디카페입니다.",
  "conclusions": [
