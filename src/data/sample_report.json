@@ -14,8 +14,8 @@
   "sede": 23851
  },
  "radiusM": 1000,
- "mode": "인구 정규화 ON · 중심 행정동 역삼1동 인구 34,205명 / 23,851세대",
- "generatedAt": "2026-07-06T02:32:41.779Z",
+ "mode": "인구 정규화 ON · 중심 행정동 역삼1동 인구 34,205명 / 23,851세대 · 서울 상권: 강남역(253m) · 유동인구 반영 ON",
+ "generatedAt": "2026-07-06T14:39:26.803Z",
  "categories": [
   {
    "category": "studycafe",
@@ -227,14 +227,21 @@
      }
     ],
     "score": {
-     "score": 90.8,
-     "metric": "national_percentile",
+     "score": 49.5,
+     "metric": "seoul_dual",
      "light": "red",
      "verdict": "포화 — 신규 진입 회피 권장",
      "storesPer10kPop": 11.1,
      "nationalTopPct": 9.2,
      "densityPerKm2": 12.1,
-     "calibration": "n=250"
+     "calibration": "resid n=250 / flpop n=120",
+     "seoul": {
+      "trdarName": "강남역",
+      "flpopTot": 7710017,
+      "storesPer10kFlpop": 0,
+      "flpopTopPct": 91.8,
+      "residTopPct": 9.2
+     }
     }
    },
    "byRadius": [
@@ -368,14 +375,21 @@
      }
     ],
     "score": {
-     "score": 74.8,
-     "metric": "national_percentile",
+     "score": 37.5,
+     "metric": "seoul_dual",
      "light": "yellow",
      "verdict": "주의 — 차별화 없으면 위험",
      "storesPer10kPop": 4.7,
      "nationalTopPct": 25.2,
      "densityPerKm2": 5.1,
-     "calibration": "n=250"
+     "calibration": "resid n=250 / flpop n=120",
+     "seoul": {
+      "trdarName": "강남역",
+      "flpopTot": 7710017,
+      "storesPer10kFlpop": 0,
+      "flpopTopPct": 99.8,
+      "residTopPct": 25.2
+     }
     }
    },
    "byRadius": [
@@ -504,14 +518,21 @@
      }
     ],
     "score": {
-     "score": 90.4,
-     "metric": "national_percentile",
+     "score": 70,
+     "metric": "seoul_dual",
      "light": "red",
      "verdict": "포화 — 신규 진입 회피 권장",
      "storesPer10kPop": 4.4,
      "nationalTopPct": 9.6,
      "densityPerKm2": 4.8,
-     "calibration": "n=250"
+     "calibration": "resid n=250 / flpop n=120",
+     "seoul": {
+      "trdarName": "강남역",
+      "flpopTot": 7710017,
+      "storesPer10kFlpop": 0,
+      "flpopTopPct": 50.5,
+      "residTopPct": 9.6
+     }
     }
    },
    "byRadius": [
@@ -565,14 +586,21 @@
      }
     ],
     "score": {
-     "score": 48.6,
-     "metric": "national_percentile",
+     "score": 25,
+     "metric": "seoul_dual",
      "light": "green",
      "verdict": "여유 — 진입 검토 가능",
      "storesPer10kPop": 0.3,
      "nationalTopPct": 51.4,
      "densityPerKm2": 0.3,
-     "calibration": "n=250"
+     "calibration": "resid n=250 / flpop n=120",
+     "seoul": {
+      "trdarName": "강남역",
+      "flpopTot": 7710017,
+      "storesPer10kFlpop": 0,
+      "flpopTopPct": 98.7,
+      "residTopPct": 51.4
+     }
     }
    },
    "byRadius": [
@@ -853,14 +881,21 @@
      }
     ],
     "score": {
-     "score": 84.9,
-     "metric": "national_percentile",
+     "score": 44.4,
+     "metric": "seoul_dual",
      "light": "red",
      "verdict": "포화 — 신규 진입 회피 권장",
      "storesPer10kPop": 43.3,
      "nationalTopPct": 15.1,
      "densityPerKm2": 47.1,
-     "calibration": "n=250"
+     "calibration": "resid n=250 / flpop n=120",
+     "seoul": {
+      "trdarName": "강남역",
+      "flpopTot": 7710017,
+      "storesPer10kFlpop": 0.2,
+      "flpopTopPct": 96.1,
+      "residTopPct": 15.1
+     }
     }
    },
    "byRadius": [
@@ -895,6 +930,84 @@
    ]
   }
  ],
+ "seoul": {
+  "trdar": {
+   "trdarName": "강남역",
+   "distanceM": 253,
+   "adstrd": "서초2동",
+   "flpopTot": 7710017,
+   "flpopMale": 3770582,
+   "flpopFemale": 3939435,
+   "topAges": [
+    {
+     "label": "20대",
+     "value": 2035748
+    },
+    {
+     "label": "30대",
+     "value": 1998240
+    }
+   ],
+   "flpopAsOf": "20261"
+  },
+  "categories": [
+   {
+    "category": "studycafe",
+    "label": "스터디카페",
+    "hasSales": false,
+    "approx": false,
+    "basis": "카드매출 데이터 미제공 업종(서울시 62종 분류에 없음)"
+   },
+   {
+    "category": "laundry",
+    "label": "코인빨래방",
+    "hasSales": true,
+    "approx": true,
+    "basis": "세탁소 분류 기준(무인 코인빨래방 외 일반 세탁소 포함)",
+    "quarterSalesAmt": 591009483,
+    "monthlySalesAmt": 197003161,
+    "salesCnt": 13359,
+    "stores": 13,
+    "perStoreQuarterAmt": 45462268,
+    "perStoreMonthlyAmt": 15154089,
+    "franchise": 2,
+    "openRate": 0,
+    "salesAsOf": "20261",
+    "storesAsOf": "20261"
+   },
+   {
+    "category": "photobooth",
+    "label": "무인사진관",
+    "hasSales": false,
+    "approx": false,
+    "basis": "카드매출 데이터 미제공 업종(서울시 62종 분류에 없음)"
+   },
+   {
+    "category": "icecream",
+    "label": "무인아이스크림",
+    "hasSales": false,
+    "approx": false,
+    "basis": "카드매출 데이터 미제공 업종(서울시 62종 분류에 없음)"
+   },
+   {
+    "category": "convenience",
+    "label": "편의점(전체)",
+    "hasSales": true,
+    "approx": false,
+    "basis": "편의점(직접 매핑)",
+    "quarterSalesAmt": 16942549708,
+    "monthlySalesAmt": 5647516569,
+    "salesCnt": 2221884,
+    "stores": 17,
+    "perStoreQuarterAmt": 996620571,
+    "perStoreMonthlyAmt": 332206857,
+    "franchise": 45,
+    "openRate": 2,
+    "salesAsOf": "20261",
+    "storesAsOf": "20261"
+   }
+  ]
+ },
  "summary": "역삼1동 기준으로 스터디카페, 무인사진관, 편의점(전체)은(는) 포화 상태(빨강)로, 신규 진입 위험이 높습니다. 무인아이스크림은(는) 상대적으로 여유(초록)가 있어 검토 여지가 있습니다. 가장 주의가 필요한 업종은 스터디카페입니다.",
  "conclusions": [
   {
@@ -918,5 +1031,5 @@
    "text": "편의점(전체)은(는) 반경 1km 안에 148곳이 밀집해 있어 전국 행정동 대비 상위 15.1% 수준의 포화(빨강) 상권입니다. 신규 진입 시 기존 매장과의 직접 경쟁이 불가피하므로, 확실한 입지·가격·서비스 차별화 없이는 진입을 권하지 않습니다. 반경별로 보면 500m·1km·2km·3km 구간에서 포화(빨강)로 나타나, 상권을 넓게 볼수록 경쟁이 짙어집니다."
   }
  ],
- "sampleAsOf": "2026-07-01"
+ "sampleAsOf": "20261 분기"
 }

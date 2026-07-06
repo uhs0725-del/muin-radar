@@ -24,6 +24,13 @@ interface CategoryResult {
   sample: string[];
   score?: ScoreResult;
 }
+interface SeoulCtx {
+  inSeoul: boolean;
+  trdarName?: string;
+  trdarDistanceM?: number;
+  flpopTot?: number;
+  flpopAsOf?: string;
+}
 interface Diagnosis {
   ok: boolean;
   error?: string;
@@ -34,6 +41,7 @@ interface Diagnosis {
   radiusM: number;
   mode: string;
   results: CategoryResult[];
+  seoul?: SeoulCtx;
   paid?: boolean;
   freeLimit?: number;
   freeUsed?: number;
@@ -241,6 +249,15 @@ export default function Home() {
                   <div className="mt-0.5 text-base font-semibold">
                     {data.region.si} {data.region.gu} {data.region.dong} · 반경{" "}
                     {data.radiusM >= 1000 ? `${data.radiusM / 1000}km` : `${data.radiusM}m`}
+                  </div>
+                )}
+                {data.seoul?.inSeoul ? (
+                  <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+                    🚶 유동인구 반영됨 · 서울 상권 {data.seoul.trdarName}
+                  </div>
+                ) : (
+                  <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">
+                    유동인구 미반영(서울 외)
                   </div>
                 )}
                 <div className="mt-1 text-xs text-slate-400">{data.mode}</div>

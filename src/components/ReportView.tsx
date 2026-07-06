@@ -1,6 +1,7 @@
 "use client";
 
 // 상세 리포트 렌더 — 실물(/report)과 예시(/report/sample)가 동일 컴포넌트를 공유.
+import { useState } from "react";
 import { coupangItemsFor, coupangSearchLink, COUPANG_DISCLOSURE } from "@/lib/coupang";
 
 export interface Store {
@@ -14,6 +15,13 @@ export interface ScoreResult {
   verdict: string;
   storesPer10kPop?: number;
   nationalTopPct?: number;
+  seoul?: {
+    trdarName: string;
+    flpopTot: number;
+    storesPer10kFlpop: number;
+    flpopTopPct: number;
+    residTopPct: number;
+  };
 }
 export interface CategoryResult {
   category: string;
@@ -40,6 +48,38 @@ export interface CategoryReport {
   primary: CategoryResult;
   byRadius: RadiusRow[];
 }
+export interface SeoulTrdarInfo {
+  trdarName: string;
+  distanceM: number;
+  adstrd: string;
+  flpopTot: number;
+  flpopMale: number;
+  flpopFemale: number;
+  topAges: { label: string; value: number }[];
+  flpopAsOf: string;
+}
+export interface SeoulCatDetail {
+  category: string;
+  label: string;
+  hasSales: boolean;
+  approx: boolean;
+  basis: string;
+  quarterSalesAmt?: number;
+  monthlySalesAmt?: number;
+  salesCnt?: number;
+  stores?: number;
+  perStoreQuarterAmt?: number;
+  perStoreMonthlyAmt?: number;
+  franchise?: number;
+  openRate?: number;
+  salesAsOf?: string;
+  storesAsOf?: string;
+}
+export interface SeoulPremium {
+  trdar: SeoulTrdarInfo;
+  categories: SeoulCatDetail[];
+}
+
 export interface ReportData {
   ok: boolean;
   error?: string;
@@ -54,6 +94,7 @@ export interface ReportData {
   summary?: string;
   conclusions?: { category: string; text: string }[];
   sampleAsOf?: string;
+  seoul?: SeoulPremium | null;
 }
 
 const LIGHT_DOT: Record<string, string> = {
@@ -160,6 +201,18 @@ export default function ReportView({
               <>
                 {conc && <p className="mt-2 text-sm leading-relaxed text-slate-700">{conc}</p>}
 
+                {/* 서울: 거주/유동 이중 백분위 병기 */}
+                {c.primary.score?.seoul && (
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">
+                      거주인구 대비 상위 {c.primary.score.seoul.residTopPct}%
+                    </span>
+                    <span className="rounded-full bg-indigo-50 px-2.5 py-1 font-medium text-indigo-700">
+                      유동인구 대비 상위 {c.primary.score.seoul.flpopTopPct}%
+                    </span>
+                  </div>
+                )}
+
                 {/* 4개 반경 비교 테이블 */}
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
@@ -241,6 +294,9 @@ export default function ReportView({
         );
       })}
 
+      {/* 서울 프리미엄: 상권 정보 + 카드매출 추정 + 예상수익 시뮬레이터 */}
+      {data.seoul && <SeoulPremiumSection premium={data.seoul} />}
+
       {/* 쿠팡 파트너스 맥락 링크 — 인쇄 시 숨김, 예시 페이지엔 미노출 */}
       {coupang.length > 0 && (
         <section className="no-print mt-8 rounded-2xl border border-slate-200 bg-white p-4">
@@ -287,5 +343,209 @@ function Info({ label, value }: { label: string; value: string }) {
       <div className="text-xs text-slate-400">{label}</div>
       <div className="font-semibold text-slate-800">{value}</div>
     </div>
+  );
+}
+
+// 원 → 억/만원 축약 표기
+function won(n: number): string {
+  if (n >= 1e8) return `${(n / 1e8).toFixed(1)}억원`;
+  if (n >= 1e4) return `${Math.round(n / 1e4).toLocaleString()}만원`;
+  return `${Math.round(n).toLocaleString()}원`;
+}
+
+// ── 서울 프리미엄 섹션 ───────────────────────────────────────────
+function SeoulPremiumSection({ premium }: { premium: SeoulPremium }) {
+  const { trdar, categories } = premium;
+  const withSales = categories.filter((c) => c.hasSales);
+  return (
+    <section className="report-block mt-8 border-t-2 border-indigo-200 pt-5">
+      <div className="flex items-center gap-2">
+        <span className="rounded bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">
+          서울 프리미엄
+        </span>
+        <h2 className="text-lg font-bold text-slate-900">상권 정보 · 카드매출 추정</h2>
+      </div>
+
+      {/* 상권 정보 + 유동인구 */}
+      <div className="mt-3 rounded-2xl bg-indigo-50/60 p-4 print:border print:border-slate-300 print:bg-white">
+        <div className="text-sm font-semibold text-slate-800">
+          최근접 상권: {trdar.trdarName}
+          <span className="ml-1 text-xs font-normal text-slate-400">
+            (진단 지점에서 {trdar.distanceM}m · {trdar.adstrd})
+          </span>
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+          <Info label="분기 유동인구" value={trdar.flpopTot.toLocaleString()} />
+          <Info label="남성" value={trdar.flpopMale.toLocaleString()} />
+          <Info label="여성" value={trdar.flpopFemale.toLocaleString()} />
+          <Info
+            label="주요 연령대"
+            value={
+              trdar.topAges.length
+                ? trdar.topAges.map((a) => a.label).join(" · ")
+                : "-"
+            }
+          />
+        </div>
+        <p className="mt-2 text-xs text-slate-400">
+          유동인구 = 서울시 길단위인구(상권 단위, {trdar.flpopAsOf} 분기 합계). 성별·연령 상위 2개
+          대역 표기.
+        </p>
+      </div>
+
+      {/* 카드매출 추정 */}
+      {withSales.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {categories.map((c) =>
+            c.hasSales ? (
+              <div
+                key={c.category}
+                className="rounded-xl border border-slate-200 p-4 print:border-slate-300"
+              >
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">{c.label}</h3>
+                  {c.approx && (
+                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-700">
+                      근사 매핑
+                    </span>
+                  )}
+                </div>
+                {c.approx && (
+                  <p className="mt-0.5 text-xs text-slate-400">{c.basis}</p>
+                )}
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                  <Info label="점포당 월 추정매출" value={won(c.perStoreMonthlyAmt ?? 0)} />
+                  <Info label="상권 분기 매출" value={won(c.quarterSalesAmt ?? 0)} />
+                  <Info label="점포수" value={`${(c.stores ?? 0).toLocaleString()}곳`} />
+                  <Info label="개업률" value={`${c.openRate ?? 0}%`} />
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400">
+                  점포당 월 추정매출 = 상권 분기 카드매출 ÷ 점포수 ÷ 3. 분기 결제 건수{" "}
+                  {(c.salesCnt ?? 0).toLocaleString()}건 · 매출 {c.salesAsOf} / 점포 {c.storesAsOf}{" "}
+                  분기.
+                </p>
+              </div>
+            ) : (
+              <div
+                key={c.category}
+                className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-400"
+              >
+                <b className="text-slate-500">{c.label}</b> — {c.basis}
+              </div>
+            ),
+          )}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-400">
+          {categories.map((c) => (
+            <div key={c.category}>
+              <b className="text-slate-500">{c.label}</b> — {c.basis}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 예상수익 시뮬레이터 */}
+      <RevenueSimulator categories={withSales} />
+
+      {/* 면책 */}
+      <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+        본 카드매출은 카드사 결제 데이터 기반 <b>추정치</b>로, 매장·건물·상권과 관련된 어떠한 사실도
+        증명하지 않으며 경향 분석을 위한 참고 자료입니다. 상권 단위 추정이며 개별 점포의 실제 매출과
+        다릅니다. 출처: 서울시 상권분석서비스(서울신용보증재단).
+      </p>
+    </section>
+  );
+}
+
+// 예상수익 시뮬레이터 — 클라이언트 계산. 매출 프리필(점포당 월 추정매출) + 입력.
+function RevenueSimulator({ categories }: { categories: SeoulCatDetail[] }) {
+  const prefill = categories.find((c) => (c.perStoreMonthlyAmt ?? 0) > 0);
+  const [revenue, setRevenue] = useState<number>(
+    prefill?.perStoreMonthlyAmt ? Math.round(prefill.perStoreMonthlyAmt / 10000) : 0,
+  ); // 만원 단위
+  const [rent, setRent] = useState<number>(150); // 만원
+  const [costPct, setCostPct] = useState<number>(35); // 관리·재료비율 %
+  const [invest, setInvest] = useState<number>(5000); // 초기투자 만원
+
+  const rev = revenue * 10000;
+  const rentW = rent * 10000;
+  const cost = rev * (costPct / 100);
+  const monthProfit = rev - rentW - cost; // 무인 특성상 인건비 기본 0
+  const yearProfit = monthProfit * 12;
+  const paybackMonths = monthProfit > 0 ? (invest * 10000) / monthProfit : null;
+
+  return (
+    <div className="mt-5 rounded-2xl border-2 border-slate-900 p-4 print:border-slate-400">
+      <h3 className="text-base font-bold text-slate-900">예상수익 시뮬레이터</h3>
+      <p className="mt-0.5 text-xs text-slate-400">
+        {prefill
+          ? `${prefill.label} 점포당 월 추정매출을 기본값으로 채웠습니다. 값을 바꾸면 즉시 재계산됩니다.`
+          : "월 매출 등을 입력하면 손익을 계산합니다."}{" "}
+        무인 특성상 인건비는 0으로 가정합니다.
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <SimInput label="월 매출(만원)" value={revenue} onChange={setRevenue} />
+        <SimInput label="월세(만원)" value={rent} onChange={setRent} />
+        <SimInput label="관리·재료비율(%)" value={costPct} onChange={setCostPct} />
+        <SimInput label="초기투자(만원)" value={invest} onChange={setInvest} />
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+        <div
+          className={`rounded-xl p-3 ${monthProfit >= 0 ? "bg-emerald-50" : "bg-red-50"} print:border print:border-slate-300 print:bg-white`}
+        >
+          <div className="text-xs text-slate-400">월 손익</div>
+          <div
+            className={`text-lg font-bold ${monthProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}
+          >
+            {monthProfit >= 0 ? "+" : "−"}
+            {won(Math.abs(monthProfit))}
+          </div>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-3 print:border print:border-slate-300 print:bg-white">
+          <div className="text-xs text-slate-400">연 손익</div>
+          <div
+            className={`text-lg font-bold ${yearProfit >= 0 ? "text-slate-800" : "text-red-600"}`}
+          >
+            {yearProfit >= 0 ? "+" : "−"}
+            {won(Math.abs(yearProfit))}
+          </div>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-3 print:border print:border-slate-300 print:bg-white">
+          <div className="text-xs text-slate-400">투자 회수기간</div>
+          <div className="text-lg font-bold text-slate-800">
+            {paybackMonths
+              ? `${Math.round(paybackMonths)}개월 (${(paybackMonths / 12).toFixed(1)}년)`
+              : "회수 불가"}
+          </div>
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] text-slate-400">
+        월 손익 = 월 매출 − 월세 − (월 매출 × 관리·재료비율). 회수기간 = 초기투자 ÷ 월 손익. 세금·
+        카드수수료 등은 미반영한 단순 추정입니다.
+      </p>
+    </div>
+  );
+}
+
+function SimInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs text-slate-500">{label}</span>
+      <input
+        type="number"
+        value={Number.isFinite(value) ? value : 0}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm outline-none focus:border-slate-900"
+      />
+    </label>
   );
 }

@@ -5,6 +5,16 @@
 import { CATEGORY_MAP, type CategoryDef, type Measurable } from "./categories";
 import populationRaw from "@/data/population.json";
 import calibrationRaw from "@/data/calibration.json";
+import {
+  nearestTrdar,
+  trdarsWithin,
+  flpopOf,
+  salesOf,
+  storesOf,
+  SEOUL_INDUSTY,
+  SEOUL_ASOF,
+  type SeoulMatch,
+} from "./seoul";
 
 const POPULATION = populationRaw as unknown as Record<string, [number, number]>; // code -> [pop, sede]
 
@@ -35,6 +45,24 @@ function calibForRadius(radiusM: number): Record<string, CalibCat> | null {
     Math.abs(b - radiusM) < Math.abs(a - radiusM) ? b : a,
   );
   return raw[String(nearest)] as Record<string, CalibCat>;
+}
+
+// 서울 유동인구 캘리브: calibration.json 안의 seoulFlpop 섹션(radius→cat→CalibCat).
+// per-유동인구 지표(count/유동인구*10000)의 서울 내 분포 백분위. 없으면 null.
+function seoulFlpopCalib(radiusM: number): Record<string, CalibCat> | null {
+  const raw = CALIB_RAW as Record<string, unknown>;
+  const sf = raw?.seoulFlpop as Record<string, Record<string, CalibCat>> | undefined;
+  if (!sf || Object.keys(sf).length === 0) return null;
+  const key = String(radiusM);
+  if (key in sf) return sf[key];
+  const avail = Object.keys(sf)
+    .filter((k) => /^\d+$/.test(k))
+    .map(Number);
+  if (!avail.length) return null;
+  const nearest = avail.reduce((a, b) =>
+    Math.abs(b - radiusM) < Math.abs(a - radiusM) ? b : a,
+  );
+  return sf[String(nearest)];
 }
 
 function percentileOf(v: number, breakpoints: Record<string, number>): number {
@@ -245,13 +273,21 @@ export async function collectCompetitors(
 
 export interface ScoreResult {
   score: number;
-  metric: "national_percentile" | "density_only";
+  metric: "national_percentile" | "density_only" | "seoul_dual";
   light: "green" | "yellow" | "red";
   verdict: string;
   storesPer10kPop?: number;
   nationalTopPct?: number;
   densityPerKm2: number;
   calibration: string;
+  // 서울 전용 — 유동인구 반영 이중 지표(있을 때만 채워짐)
+  seoul?: {
+    trdarName: string;
+    flpopTot: number; // 최근접 상권 총 유동인구
+    storesPer10kFlpop: number; // 매장수 / 유동인구 * 10000
+    flpopTopPct: number; // 유동인구 대비 상위 %
+    residTopPct: number; // 거주인구 대비 상위 % (기존)
+  };
 }
 
 const VERDICT: Record<string, string> = {
@@ -265,6 +301,7 @@ export function saturationScore(
   radiusM: number,
   pop: number | null,
   catKey?: string,
+  seoulMatch?: SeoulMatch | null, // 서울이면 최근접 상권 → 유동인구 이중 지표 병행
 ): ScoreResult {
   const areaKm2 = Math.PI * (radiusM / 1000) ** 2;
   const density = areaKm2 ? count / areaKm2 : 0;
@@ -274,20 +311,64 @@ export function saturationScore(
   if (pop && pop > 0 && cinfo) {
     const per10k = (count / pop) * 10000;
     const bp = cinfo.breakpoints;
-    const pctile = Math.round(percentileOf(per10k, bp) * 10) / 10;
+    const residPctile = Math.round(percentileOf(per10k, bp) * 10) / 10;
     const yellowAt = bp["60"] ?? 0;
     const redAt = bp["80"] ?? 0;
-    let light: "green" | "yellow" | "red";
-    if (per10k >= redAt && redAt > 0) light = "red";
-    else if (per10k >= yellowAt && yellowAt > 0) light = "yellow";
-    else light = "green";
+    let residLight: "green" | "yellow" | "red";
+    if (per10k >= redAt && redAt > 0) residLight = "red";
+    else if (per10k >= yellowAt && yellowAt > 0) residLight = "yellow";
+    else residLight = "green";
+    const residTopPct = Math.round((100 - residPctile) * 10) / 10;
+
+    // 서울: 최근접 상권 유동인구로 이중 지표 계산 → 거주50%+유동50% 평균.
+    const flpop =
+      seoulMatch && catKey ? flpopOf(seoulMatch.trdarCd) : null;
+    const flCalib = seoulMatch && catKey ? seoulFlpopCalib(radiusM) : null;
+    const flInfo = flCalib && catKey ? flCalib[catKey] : undefined;
+    if (seoulMatch && flpop && flpop.tot > 0 && flInfo) {
+      const perFl = (count / flpop.tot) * 10000;
+      const fbp = flInfo.breakpoints;
+      const flPctile = Math.round(percentileOf(perFl, fbp) * 10) / 10;
+      const flYellow = fbp["60"] ?? 0;
+      const flRed = fbp["80"] ?? 0;
+      let flLight: "green" | "yellow" | "red";
+      if (perFl >= flRed && flRed > 0) flLight = "red";
+      else if (perFl >= flYellow && flYellow > 0) flLight = "yellow";
+      else flLight = "green";
+      const flTopPct = Math.round((100 - flPctile) * 10) / 10;
+
+      // 최종 = 두 백분위 평균. 신호등은 평균 백분위 기준(p60/p80).
+      const avgPctile = Math.round(((residPctile + flPctile) / 2) * 10) / 10;
+      let light: "green" | "yellow" | "red";
+      if (residLight === "red" || flLight === "red") light = "red";
+      else if (residLight === "yellow" || flLight === "yellow") light = "yellow";
+      else light = "green";
+      return {
+        score: avgPctile,
+        metric: "seoul_dual",
+        light,
+        verdict: VERDICT[light],
+        storesPer10kPop: Math.round(per10k * 10) / 10,
+        nationalTopPct: residTopPct,
+        densityPerKm2: Math.round(density * 10) / 10,
+        calibration: `resid n=${cinfo.n} / flpop n=${flInfo.n}`,
+        seoul: {
+          trdarName: seoulMatch.name,
+          flpopTot: flpop.tot,
+          storesPer10kFlpop: Math.round(perFl * 10) / 10,
+          flpopTopPct: flTopPct,
+          residTopPct,
+        },
+      };
+    }
+
     return {
-      score: pctile,
+      score: residPctile,
       metric: "national_percentile",
-      light,
-      verdict: VERDICT[light],
+      light: residLight,
+      verdict: VERDICT[residLight],
       storesPer10kPop: Math.round(per10k * 10) / 10,
-      nationalTopPct: Math.round((100 - pctile) * 10) / 10,
+      nationalTopPct: residTopPct,
       densityPerKm2: Math.round(density * 10) / 10,
       calibration: `n=${cinfo.n}`,
     };
@@ -309,6 +390,14 @@ export function saturationScore(
   };
 }
 
+export interface SeoulContext {
+  inSeoul: boolean;
+  trdarName?: string;
+  trdarDistanceM?: number;
+  flpopTot?: number; // 최근접 상권 총 유동인구(최신 분기)
+  flpopAsOf?: string;
+}
+
 export interface Diagnosis {
   ok: boolean;
   error?: string;
@@ -319,6 +408,7 @@ export interface Diagnosis {
   radiusM: number;
   mode: string;
   results: CategoryResult[];
+  seoul?: SeoulContext; // 서울이면 유동인구 반영 배지용(세부 수치는 유료 리포트)
 }
 
 export async function diagnose(
@@ -342,20 +432,43 @@ export async function diagnose(
   const popRow = region ? POPULATION[region.code] : undefined;
   const popinfo = popRow ? { pop: popRow[0], sede: popRow[1] } : null;
 
+  // 서울이면 최근접 상권 매칭(유동인구 이중 지표용). 서울 밖이면 null → 기존 동작 그대로.
+  const seoulMatch = nearestTrdar(geo.x, geo.y);
+  const seoulFl = seoulMatch ? flpopOf(seoulMatch.trdarCd) : null;
+
   const results: CategoryResult[] = [];
   for (const key of catKeys) {
     const def = CATEGORY_MAP[key];
     if (!def) continue;
     const comp = await collectCompetitors(def, geo.x, geo.y, radius, withStores);
     if (comp.count !== null) {
-      comp.score = saturationScore(comp.count, radius, popinfo ? popinfo.pop : null, key);
+      comp.score = saturationScore(
+        comp.count,
+        radius,
+        popinfo ? popinfo.pop : null,
+        key,
+        seoulMatch,
+      );
     }
     results.push(comp);
   }
 
+  const seoulSuffix = seoulMatch
+    ? ` · 서울 상권 매칭: ${seoulMatch.name}(${seoulMatch.distanceM}m) · 유동인구 반영 ON`
+    : "";
   const mode = popinfo
-    ? `인구 정규화 ON · 중심 행정동 ${region?.dong} 인구 ${popinfo.pop.toLocaleString()}명 / ${popinfo.sede.toLocaleString()}세대`
-    : "density-only · 행정동 인구 미매칭";
+    ? `인구 정규화 ON · 중심 행정동 ${region?.dong} 인구 ${popinfo.pop.toLocaleString()}명 / ${popinfo.sede.toLocaleString()}세대${seoulSuffix}`
+    : `density-only · 행정동 인구 미매칭${seoulSuffix}`;
+
+  const seoulCtx: SeoulContext = seoulMatch
+    ? {
+        inSeoul: true,
+        trdarName: seoulMatch.name,
+        trdarDistanceM: seoulMatch.distanceM,
+        flpopTot: seoulFl?.tot,
+        flpopAsOf: SEOUL_ASOF.flpop,
+      }
+    : { inSeoul: false };
 
   return {
     ok: true,
@@ -366,6 +479,7 @@ export async function diagnose(
     radiusM: radius,
     mode,
     results,
+    seoul: seoulCtx,
   };
 }
 
@@ -391,6 +505,40 @@ export interface CategoryReport {
   byRadius: RadiusRow[];
 }
 
+// ── 서울 프리미엄 섹션(유료 리포트 전용) ─────────────────────────
+export interface SeoulTrdarInfo {
+  trdarName: string;
+  distanceM: number;
+  adstrd: string;
+  flpopTot: number;
+  flpopMale: number;
+  flpopFemale: number;
+  topAges: { label: string; value: number }[]; // 상위 2개 연령대
+  flpopAsOf: string;
+}
+export interface SeoulCatDetail {
+  category: string;
+  label: string;
+  hasSales: boolean; // 서울 62종 매핑 존재
+  approx: boolean; // 근사 매핑 여부
+  basis: string; // 근사 기준(정직 표기)
+  // hasSales일 때만
+  quarterSalesAmt?: number; // 상권×업종 분기 카드매출 추정(원)
+  monthlySalesAmt?: number; // ÷3 월 환산(원)
+  salesCnt?: number; // 분기 결제 건수
+  stores?: number; // 점포수
+  perStoreQuarterAmt?: number; // 점포당 분기 추정매출(핵심)
+  perStoreMonthlyAmt?: number; // 점포당 월 추정매출(시뮬레이터 프리필)
+  franchise?: number;
+  openRate?: number; // 개업률(%)
+  salesAsOf?: string;
+  storesAsOf?: string;
+}
+export interface SeoulPremium {
+  trdar: SeoulTrdarInfo;
+  categories: SeoulCatDetail[];
+}
+
 export interface DetailedReport {
   ok: boolean;
   error?: string;
@@ -402,6 +550,7 @@ export interface DetailedReport {
   mode: string;
   generatedAt: string;
   categories: CategoryReport[];
+  seoul?: SeoulPremium | null; // 서울이면 채워짐
 }
 
 // 반경 4개 × 업종 루프. 카카오 호출이 많아 무료 진단과 분리(유료 게이트 뒤에서만 호출).
@@ -427,6 +576,8 @@ export async function detailedReport(
   const popinfo = popRow ? { pop: popRow[0], sede: popRow[1] } : null;
   const pop = popinfo ? popinfo.pop : null;
 
+  const seoulMatch = nearestTrdar(geo.x, geo.y);
+
   const categories: CategoryReport[] = [];
   for (const key of catKeys) {
     const def = CATEGORY_MAP[key];
@@ -435,7 +586,7 @@ export async function detailedReport(
     // 선택 반경 기준 상세(매장 전체 리스트 포함)
     const primary = await collectCompetitors(def, geo.x, geo.y, radius, true);
     if (primary.count !== null) {
-      primary.score = saturationScore(primary.count, radius, pop, key);
+      primary.score = saturationScore(primary.count, radius, pop, key, seoulMatch);
     }
 
     // 4개 반경 비교
@@ -449,7 +600,7 @@ export async function detailedReport(
       const comp =
         r === radius ? primary : await collectCompetitors(def, geo.x, geo.y, r, false);
       const score =
-        comp.count !== null ? saturationScore(comp.count, r, pop, key) : undefined;
+        comp.count !== null ? saturationScore(comp.count, r, pop, key, seoulMatch) : undefined;
       byRadius.push({
         radiusM: r,
         count: comp.count,
@@ -469,9 +620,15 @@ export async function detailedReport(
     });
   }
 
+  // 서울 프리미엄 섹션(카드매출/점포/유동인구)
+  const seoulPremium = seoulMatch ? buildSeoulPremium(seoulMatch, catKeys) : null;
+
+  const seoulSuffix = seoulMatch
+    ? ` · 서울 상권: ${seoulMatch.name}(${seoulMatch.distanceM}m) · 유동인구 반영 ON`
+    : "";
   const mode = popinfo
-    ? `인구 정규화 ON · 중심 행정동 ${region?.dong} 인구 ${popinfo.pop.toLocaleString()}명 / ${popinfo.sede.toLocaleString()}세대`
-    : "density-only · 행정동 인구 미매칭";
+    ? `인구 정규화 ON · 중심 행정동 ${region?.dong} 인구 ${popinfo.pop.toLocaleString()}명 / ${popinfo.sede.toLocaleString()}세대${seoulSuffix}`
+    : `density-only · 행정동 인구 미매칭${seoulSuffix}`;
 
   return {
     ok: true,
@@ -483,5 +640,78 @@ export async function detailedReport(
     mode,
     generatedAt: new Date().toISOString(),
     categories,
+    seoul: seoulPremium,
   };
+}
+
+// 서울 상권 카드매출/점포/유동인구 프리미엄 섹션 구성.
+function buildSeoulPremium(match: SeoulMatch, catKeys: string[]): SeoulPremium {
+  const fl = flpopOf(match.trdarCd);
+  const ageLabels: Record<string, string> = {
+    age10: "10대",
+    age20: "20대",
+    age30: "30대",
+    age40: "40대",
+    age50: "50대",
+    age60: "60대+",
+  };
+  let topAges: { label: string; value: number }[] = [];
+  if (fl) {
+    topAges = (
+      ["age10", "age20", "age30", "age40", "age50", "age60"] as const
+    )
+      .map((k) => ({ label: ageLabels[k], value: fl[k] }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 2);
+  }
+  const trdar: SeoulTrdarInfo = {
+    trdarName: match.name,
+    distanceM: match.distanceM,
+    adstrd: match.adstrd,
+    flpopTot: fl?.tot ?? 0,
+    flpopMale: fl?.male ?? 0,
+    flpopFemale: fl?.female ?? 0,
+    topAges,
+    flpopAsOf: SEOUL_ASOF.flpop,
+  };
+
+  const cats: SeoulCatDetail[] = [];
+  for (const key of catKeys) {
+    const def = CATEGORY_MAP[key];
+    if (!def) continue;
+    const ind = SEOUL_INDUSTY[key];
+    if (!ind || !ind.code) {
+      cats.push({
+        category: key,
+        label: def.label,
+        hasSales: false,
+        approx: false,
+        basis: "카드매출 데이터 미제공 업종(서울시 62종 분류에 없음)",
+      });
+      continue;
+    }
+    const sale = salesOf(match.trdarCd, key);
+    const store = storesOf(match.trdarCd, key);
+    const stores = store?.stores ?? 0;
+    const qAmt = sale?.amt ?? 0;
+    const perStoreQ = stores > 0 ? Math.round(qAmt / stores) : 0;
+    cats.push({
+      category: key,
+      label: def.label,
+      hasSales: true,
+      approx: ind.approx,
+      basis: ind.basis,
+      quarterSalesAmt: qAmt,
+      monthlySalesAmt: Math.round(qAmt / 3),
+      salesCnt: sale?.cnt ?? 0,
+      stores,
+      perStoreQuarterAmt: perStoreQ,
+      perStoreMonthlyAmt: Math.round(perStoreQ / 3),
+      franchise: store?.franchise ?? 0,
+      openRate: store?.openRate ?? 0,
+      salesAsOf: SEOUL_ASOF.sales,
+      storesAsOf: SEOUL_ASOF.stores,
+    });
+  }
+  return { trdar, categories: cats };
 }
