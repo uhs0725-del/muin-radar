@@ -83,6 +83,27 @@ export interface SeoulPremium {
   trdar: SeoulTrdarInfo;
   categories: SeoulCatDetail[];
 }
+export interface GyeonggiTrdarInfo {
+  trdarName: string;
+  distanceM: number;
+  salesAsOf: string;
+}
+export interface GyeonggiCatDetail {
+  category: string;
+  label: string;
+  hasSales: boolean;
+  approx: boolean;
+  basis: string;
+  quarterSalesAmt?: number;
+  monthlySalesAmt?: number;
+  salesCnt?: number;
+  kakaoCount?: number;
+  perStoreMonthlyAmt?: number;
+}
+export interface GyeonggiPremium {
+  trdar: GyeonggiTrdarInfo;
+  categories: GyeonggiCatDetail[];
+}
 export interface RentInfo {
   region: string;
   perM2ThousandWon: number;
@@ -105,6 +126,7 @@ export interface ReportData {
   conclusions?: { category: string; text: string }[];
   sampleAsOf?: string;
   seoul?: SeoulPremium | null;
+  gyeonggi?: GyeonggiPremium | null;
   rent?: RentInfo | null;
 }
 
@@ -308,19 +330,21 @@ export default function ReportView({
       {/* 월세 가늠 (전국 공통) */}
       {data.rent && <RentSection rent={data.rent} regionSi={data.region?.si} />}
 
-      {/* 서울 프리미엄: 상권 정보 + 카드매출 추정 + 예상수익 시뮬레이터 */}
+      {/* 상권 프리미엄: 서울(유동인구·점포 포함) 또는 경기(카드매출), 그 외 준비중 */}
       {data.seoul ? (
         <SeoulPremiumSection premium={data.seoul} rent={data.rent ?? null} />
+      ) : data.gyeonggi ? (
+        <GyeonggiPremiumSection premium={data.gyeonggi} rent={data.rent ?? null} />
       ) : (
         <section className="report-block rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <h2 className="text-base font-bold text-slate-700">
-            상권 유동인구·카드매출 분석 — 서울 지역 한정
+            상권 카드매출 분석 — 현재 서울·경기 제공
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-slate-500">
-            유동인구 반영 점수, 상권별 카드매출 추정(점포당 월매출), 예상수익 시뮬레이터는
-            서울시 상권분석 공공데이터 기반이라 <b>서울 주소 진단에서만</b> 제공됩니다. 진단
-            위치가 서울 외 지역이어서 이 섹션이 표시되지 않았습니다. 수도권·전국 확장은 해당
-            공공데이터가 공개되는 대로 반영할 예정입니다.
+            상권별 카드매출 추정(점포당 월매출)과 예상수익 시뮬레이터는 공공 상권분석
+            데이터 기반이라 현재 <b>서울·경기 주소 진단에서만</b> 제공됩니다(서울은 유동인구
+            반영 점수 추가). 진단 위치가 서울·경기 외 지역이어서 이 섹션이 표시되지
+            않았습니다. 그 외 지역은 해당 공공데이터가 공개되는 대로 확장할 예정입니다.
           </p>
         </section>
       )}
@@ -624,6 +648,121 @@ function SeoulPremiumSection({
         본 카드매출은 카드사 결제 데이터 기반 <b>추정치</b>로, 매장·건물·상권과 관련된 어떠한 사실도
         증명하지 않으며 경향 분석을 위한 참고 자료입니다. 상권 단위 추정이며 개별 점포의 실제 매출과
         다릅니다. 출처: 서울시 상권분석서비스(서울신용보증재단).
+      </p>
+    </section>
+  );
+}
+
+// ── 경기 프리미엄 섹션 ───────────────────────────────────────────
+// 서울과 달리 유동인구·점포수·추이 없음(단일 분기). 상권 카드매출 + 점포당(카카오 count 분모).
+function GyeonggiPremiumSection({
+  premium,
+  rent,
+}: {
+  premium: GyeonggiPremium;
+  rent: RentInfo | null;
+}) {
+  const { trdar, categories } = premium;
+  const withSales = categories.filter((c) => c.hasSales);
+  // 시뮬레이터 프리필용 — SeoulCatDetail 형태로 어댑트(label/perStoreMonthlyAmt만 사용됨).
+  const simCats: SeoulCatDetail[] = withSales.map((c) => ({
+    category: c.category,
+    label: c.label,
+    hasSales: true,
+    approx: c.approx,
+    basis: c.basis,
+    perStoreMonthlyAmt: c.perStoreMonthlyAmt,
+  }));
+  return (
+    <section className="report-block mt-8 border-t-2 border-emerald-200 pt-5">
+      <div className="flex items-center gap-2">
+        <span className="rounded bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">
+          경기 프리미엄
+        </span>
+        <h2 className="text-lg font-bold text-slate-900">상권 정보 · 카드매출 추정</h2>
+      </div>
+
+      {/* 상권 정보 */}
+      <div className="mt-3 rounded-2xl bg-emerald-50/60 p-4 print:border print:border-slate-300 print:bg-white">
+        <div className="text-sm font-semibold text-slate-800">
+          최근접 상권: {trdar.trdarName}
+          <span className="ml-1 text-xs font-normal text-slate-400">
+            (진단 지점에서 {trdar.distanceM}m)
+          </span>
+        </div>
+        <p className="mt-2 text-xs text-slate-400">
+          경기 상권은 상권명 지오코딩으로 좌표를 추정하므로 위치 정밀도가 서울보다 낮을 수
+          있습니다. 유동인구·점포수 데이터는 경기 공공데이터에 없어 제공되지 않습니다.
+        </p>
+      </div>
+
+      {/* 카드매출 추정 */}
+      {withSales.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {categories.map((c) =>
+            c.hasSales ? (
+              <div
+                key={c.category}
+                className="rounded-xl border border-slate-200 p-4 print:border-slate-300"
+              >
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">{c.label}</h3>
+                  {c.approx && (
+                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-700">
+                      근사 매핑
+                    </span>
+                  )}
+                </div>
+                {c.approx && <p className="mt-0.5 text-xs text-slate-400">{c.basis}</p>}
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                  <Info
+                    label="점포당 월 추정매출"
+                    value={c.perStoreMonthlyAmt ? won(c.perStoreMonthlyAmt) : "산출 불가"}
+                  />
+                  <Info label="상권 분기 매출" value={won(c.quarterSalesAmt ?? 0)} />
+                  <Info label="상권 월 매출(추정)" value={won(c.monthlySalesAmt ?? 0)} />
+                  <Info
+                    label="점포당 분모(카카오)"
+                    value={c.kakaoCount !== undefined ? `${c.kakaoCount.toLocaleString()}곳` : "-"}
+                  />
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400">
+                  ❗경기 공공데이터에는 점포수가 없어, 점포당 월 추정매출 = 상권 분기 카드매출 ÷{" "}
+                  <b>카카오 반경 내 매장수</b> ÷ 3 으로 근사했습니다. 상권 매출의 집계 범위와 카카오
+                  매장 반경이 달라 실제 점포당 매출과 차이가 큽니다. 분기 결제 건수{" "}
+                  {(c.salesCnt ?? 0).toLocaleString()}건 · {trdar.salesAsOf.slice(0, 4)}년{" "}
+                  {trdar.salesAsOf.slice(4)}분기 카드매출.
+                </p>
+              </div>
+            ) : (
+              <div
+                key={c.category}
+                className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-400"
+              >
+                <b className="text-slate-500">{c.label}</b> — {c.basis}
+              </div>
+            ),
+          )}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-400">
+          {categories.map((c) => (
+            <div key={c.category}>
+              <b className="text-slate-500">{c.label}</b> — {c.basis}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 예상수익 시뮬레이터(서울과 공용) */}
+      <RevenueSimulator categories={simCats} rent={rent} />
+
+      {/* 면책 */}
+      <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+        본 카드매출은 카드사 결제 데이터 기반 <b>추정치</b>로, 매장·건물·상권과 관련된 어떠한 사실도
+        증명하지 않으며 경향 분석을 위한 참고 자료입니다. 상권 단위 추정이며 개별 점포의 실제 매출과
+        다릅니다. 출처: 경기도시장상권진흥원(카드매출 기반 추정), 경기데이터드림 OpenAPI. 기준 분기:{" "}
+        {trdar.salesAsOf.slice(0, 4)}년 {trdar.salesAsOf.slice(4)}분기(단일 분기, 추이 미제공).
       </p>
     </section>
   );

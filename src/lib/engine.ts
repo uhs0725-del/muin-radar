@@ -17,6 +17,13 @@ import {
   type SeoulMatch,
 } from "./seoul";
 import { rentForSi, type RentInfo } from "./rent";
+import {
+  nearestGgTrdar,
+  ggSalesOf,
+  GG_INDUSTY,
+  GG_ASOF,
+  type GgMatch,
+} from "./gyeonggi";
 
 const POPULATION = populationRaw as unknown as Record<string, [number, number]>; // code -> [pop, sede]
 
@@ -545,6 +552,32 @@ export interface SeoulPremium {
   categories: SeoulCatDetail[];
 }
 
+// ── 경기 프리미엄 섹션(유료 리포트 전용) ──────────────────────────
+// 서울과 달리 유동인구·점포수·추이 없음(단일 분기). 상권 카드매출만.
+export interface GyeonggiTrdarInfo {
+  trdarName: string;
+  distanceM: number;
+  salesAsOf: string;
+}
+export interface GyeonggiCatDetail {
+  category: string;
+  label: string;
+  hasSales: boolean;
+  approx: boolean;
+  basis: string;
+  // hasSales일 때만
+  quarterSalesAmt?: number; // 상권×업종 분기 카드매출 추정(원)
+  monthlySalesAmt?: number; // ÷3 월 환산(원)
+  salesCnt?: number; // 분기 결제 건수
+  // ❗경기는 STORE_CNT 없음 → 카카오 반경 매장수(kakaoCount)로 나눠 점포당 추정(분모 차이 명시).
+  kakaoCount?: number; // 카카오 선택반경 내 매장수(점포당 분모)
+  perStoreMonthlyAmt?: number; // 점포당 월 추정매출(카카오 count 분모, 시뮬레이터 프리필)
+}
+export interface GyeonggiPremium {
+  trdar: GyeonggiTrdarInfo;
+  categories: GyeonggiCatDetail[];
+}
+
 export interface DetailedReport {
   ok: boolean;
   error?: string;
@@ -557,6 +590,7 @@ export interface DetailedReport {
   generatedAt: string;
   categories: CategoryReport[];
   seoul?: SeoulPremium | null; // 서울이면 채워짐
+  gyeonggi?: GyeonggiPremium | null; // 경기면 채워짐(서울과 배타적)
   rent?: RentInfo | null; // 소규모상가 시도 평균 임대료(전국 공통)
 }
 
@@ -584,6 +618,10 @@ export async function detailedReport(
   const pop = popinfo ? popinfo.pop : null;
 
   const seoulMatch = nearestTrdar(geo.x, geo.y);
+  // 서울이 아닐 때만 경기 매칭 시도(서울과 배타적, 서울 우선).
+  const ggMatch = seoulMatch ? null : nearestGgTrdar(geo.x, geo.y);
+  // 경기 점포당 매출 분모용: catKey → 카카오 선택반경 매장수.
+  const kakaoCounts: Record<string, number | null> = {};
 
   const categories: CategoryReport[] = [];
   for (const key of catKeys) {
@@ -595,6 +633,7 @@ export async function detailedReport(
     if (primary.count !== null) {
       primary.score = saturationScore(primary.count, radius, pop, key, seoulMatch);
     }
+    kakaoCounts[key] = primary.count;
 
     // 4개 반경 비교
     const byRadius: RadiusRow[] = [];
@@ -629,16 +668,20 @@ export async function detailedReport(
 
   // 서울 프리미엄 섹션(카드매출/점포/유동인구)
   const seoulPremium = seoulMatch ? buildSeoulPremium(seoulMatch, catKeys) : null;
+  // 경기 프리미엄 섹션(상권 카드매출) — 서울이 아닐 때만.
+  const gyeonggiPremium = ggMatch ? buildGyeonggiPremium(ggMatch, catKeys, kakaoCounts) : null;
 
   // 월세 가늠(전국 공통) — 소규모상가 시도 평균 임대료
   const rent = region ? rentForSi(region.si) : null;
 
-  const seoulSuffix = seoulMatch
+  const regionSuffix = seoulMatch
     ? ` · 서울 상권: ${seoulMatch.name}(${seoulMatch.distanceM}m) · 유동인구 반영 ON`
-    : "";
+    : ggMatch
+      ? ` · 경기 상권: ${ggMatch.name}(${ggMatch.distanceM}m) · 카드매출 반영 ON`
+      : "";
   const mode = popinfo
-    ? `인구 정규화 ON · 중심 행정동 ${region?.dong} 인구 ${popinfo.pop.toLocaleString()}명 / ${popinfo.sede.toLocaleString()}세대${seoulSuffix}`
-    : `density-only · 행정동 인구 미매칭${seoulSuffix}`;
+    ? `인구 정규화 ON · 중심 행정동 ${region?.dong} 인구 ${popinfo.pop.toLocaleString()}명 / ${popinfo.sede.toLocaleString()}세대${regionSuffix}`
+    : `density-only · 행정동 인구 미매칭${regionSuffix}`;
 
   return {
     ok: true,
@@ -651,6 +694,7 @@ export async function detailedReport(
     generatedAt: new Date().toISOString(),
     categories,
     seoul: seoulPremium,
+    gyeonggi: gyeonggiPremium,
     rent,
   };
 }
@@ -733,6 +777,65 @@ function buildSeoulPremium(match: SeoulMatch, catKeys: string[]): SeoulPremium {
       storesAsOf: SEOUL_ASOF.stores,
       trend,
       yoyPct,
+    });
+  }
+  return { trdar, categories: cats };
+}
+
+// 경기 상권 카드매출 프리미엄 섹션 구성.
+// ❗서울과 다름: 유동인구·점포수·추이 없음(단일 분기). 점포당 = 상권 분기매출 ÷ 카카오 반경 매장수 ÷ 3.
+function buildGyeonggiPremium(
+  match: GgMatch,
+  catKeys: string[],
+  kakaoCounts: Record<string, number | null>,
+): GyeonggiPremium {
+  const trdar: GyeonggiTrdarInfo = {
+    trdarName: match.name,
+    distanceM: match.distanceM,
+    salesAsOf: GG_ASOF.sales,
+  };
+  const cats: GyeonggiCatDetail[] = [];
+  for (const key of catKeys) {
+    const def = CATEGORY_MAP[key];
+    if (!def) continue;
+    const ind = GG_INDUSTY[key];
+    if (!ind || !ind.code) {
+      cats.push({
+        category: key,
+        label: def.label,
+        hasSales: false,
+        approx: false,
+        basis: "카드매출 데이터 미제공 업종(경기 KSIC 분류에 해당 코드 없음)",
+      });
+      continue;
+    }
+    const sale = ggSalesOf(match.trdarCd, key);
+    if (!sale) {
+      cats.push({
+        category: key,
+        label: def.label,
+        hasSales: false,
+        approx: ind.approx,
+        basis: "이 상권에 해당 업종 카드매출 데이터가 없습니다.",
+      });
+      continue;
+    }
+    const qAmt = sale.amt;
+    // 점포당: 경기는 점포수 미제공 → 카카오 반경 매장수 분모(없으면 미산출).
+    const kc = kakaoCounts[key];
+    const perStoreMonthly =
+      kc && kc > 0 ? Math.round(qAmt / kc / 3) : undefined;
+    cats.push({
+      category: key,
+      label: def.label,
+      hasSales: true,
+      approx: ind.approx,
+      basis: ind.basis,
+      quarterSalesAmt: qAmt,
+      monthlySalesAmt: Math.round(qAmt / 3),
+      salesCnt: sale.cnt,
+      kakaoCount: kc ?? undefined,
+      perStoreMonthlyAmt: perStoreMonthly,
     });
   }
   return { trdar, categories: cats };
