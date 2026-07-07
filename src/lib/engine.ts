@@ -559,6 +559,8 @@ export interface SeoulPremium {
 
 // ── 경기 프리미엄 섹션(유료 리포트 전용) ──────────────────────────
 // 서울과 달리 유동인구·점포수·추이 없음(단일 분기). 상권 카드매출만.
+// ❗경기 데이터(TBGGESTDEVALLSTM)는 STORE_CNT 전부 null → 상권 내 점포수를 알 수 없어
+//   "점포당" 환산은 원천 불가. 총액 + 건당 결제단가(분모 문제 없음)만 정직하게 제공한다.
 export interface GyeonggiTrdarInfo {
   trdarName: string;
   distanceM: number;
@@ -572,11 +574,9 @@ export interface GyeonggiCatDetail {
   basis: string;
   // hasSales일 때만
   quarterSalesAmt?: number; // 상권×업종 분기 카드매출 추정(원)
-  monthlySalesAmt?: number; // ÷3 월 환산(원)
+  monthlySalesAmt?: number; // ÷3 월 환산(원) — "상권 업종 월 카드매출(총액)"
   salesCnt?: number; // 분기 결제 건수
-  // ❗경기는 STORE_CNT 없음 → 카카오 반경 매장수(kakaoCount)로 나눠 점포당 추정(분모 차이 명시).
-  kakaoCount?: number; // 카카오 선택반경 내 매장수(점포당 분모)
-  perStoreMonthlyAmt?: number; // 점포당 월 추정매출(카카오 count 분모, 시뮬레이터 프리필)
+  perTxnAmt?: number; // 건당 결제단가 = quarterSalesAmt ÷ salesCnt(원/건, 반올림). 분모 문제 없는 유효 지표.
 }
 export interface GyeonggiPremium {
   trdar: GyeonggiTrdarInfo;
@@ -626,8 +626,6 @@ export async function detailedReport(
   const seoulMatch = nearestTrdar(geo.x, geo.y);
   // 서울이 아닐 때만 경기 매칭 시도(서울과 배타적, 서울 우선).
   const ggMatch = seoulMatch ? null : nearestGgTrdar(geo.x, geo.y);
-  // 경기 점포당 매출 분모용: catKey → 카카오 선택반경 매장수.
-  const kakaoCounts: Record<string, number | null> = {};
 
   const categories: CategoryReport[] = [];
   for (const key of catKeys) {
@@ -639,7 +637,6 @@ export async function detailedReport(
     if (primary.count !== null) {
       primary.score = saturationScore(primary.count, radius, pop, key, seoulMatch);
     }
-    kakaoCounts[key] = primary.count;
 
     // 4개 반경 비교
     const byRadius: RadiusRow[] = [];
@@ -675,7 +672,7 @@ export async function detailedReport(
   // 서울 프리미엄 섹션(카드매출/점포/유동인구)
   const seoulPremium = seoulMatch ? buildSeoulPremium(seoulMatch, catKeys) : null;
   // 경기 프리미엄 섹션(상권 카드매출) — 서울이 아닐 때만.
-  const gyeonggiPremium = ggMatch ? buildGyeonggiPremium(ggMatch, catKeys, kakaoCounts) : null;
+  const gyeonggiPremium = ggMatch ? buildGyeonggiPremium(ggMatch, catKeys) : null;
 
   // ── 업종 추천 랭킹: 측정가능 전 업종을 primary 반경으로 스캔 → 여유도 정렬 ──
   // 선택 업종은 위에서 이미 계산한 score 재사용, 미선택 측정가능 업종만 추가 스캔(카카오 +N회).
@@ -693,9 +690,8 @@ export async function detailedReport(
       scanned.set(def.key, comp);
     }
     if (comp.count === null || !comp.score) continue;
-    // 참고 병기: 상권 카드매출 점포당 월매출 + 심야 비중(서울/경기 프리미엄에서).
+    // 참고 병기: 점포당 월매출 + 심야 비중은 서울만(경기는 점포수 미제공 → 점포당 산출 불가).
     const sCat = seoulPremium?.categories.find((x) => x.category === def.key);
-    const gCat = gyeonggiPremium?.categories.find((x) => x.category === def.key);
     rankInputs.push({
       category: def.key,
       label: def.label,
@@ -703,7 +699,7 @@ export async function detailedReport(
       count: comp.count,
       light: comp.score.light,
       nationalTopPct: comp.score.nationalTopPct,
-      perStoreMonthlyAmt: sCat?.perStoreMonthlyAmt ?? gCat?.perStoreMonthlyAmt,
+      perStoreMonthlyAmt: sCat?.perStoreMonthlyAmt,
       nightPct: sCat?.nightPct,
     });
   }
@@ -837,11 +833,11 @@ function buildSeoulPremium(match: SeoulMatch, catKeys: string[]): SeoulPremium {
 }
 
 // 경기 상권 카드매출 프리미엄 섹션 구성.
-// ❗서울과 다름: 유동인구·점포수·추이 없음(단일 분기). 점포당 = 상권 분기매출 ÷ 카카오 반경 매장수 ÷ 3.
+// ❗서울과 다름: 유동인구·점포수·추이 없음(단일 분기). STORE_CNT 전부 null → 점포당 환산 불가.
+//   총액(월 카드매출) + 건당 결제단가만 정직하게 제공.
 function buildGyeonggiPremium(
   match: GgMatch,
   catKeys: string[],
-  kakaoCounts: Record<string, number | null>,
 ): GyeonggiPremium {
   const trdar: GyeonggiTrdarInfo = {
     trdarName: match.name,
@@ -875,10 +871,8 @@ function buildGyeonggiPremium(
       continue;
     }
     const qAmt = sale.amt;
-    // 점포당: 경기는 점포수 미제공 → 카카오 반경 매장수 분모(없으면 미산출).
-    const kc = kakaoCounts[key];
-    const perStoreMonthly =
-      kc && kc > 0 ? Math.round(qAmt / kc / 3) : undefined;
+    // 건당 결제단가 = 분기 카드매출 ÷ 분기 결제 건수. 분모 문제 없는 유효 지표.
+    const perTxn = sale.cnt > 0 ? Math.round(qAmt / sale.cnt) : undefined;
     cats.push({
       category: key,
       label: def.label,
@@ -888,8 +882,7 @@ function buildGyeonggiPremium(
       quarterSalesAmt: qAmt,
       monthlySalesAmt: Math.round(qAmt / 3),
       salesCnt: sale.cnt,
-      kakaoCount: kc ?? undefined,
-      perStoreMonthlyAmt: perStoreMonthly,
+      perTxnAmt: perTxn,
     });
   }
   return { trdar, categories: cats };

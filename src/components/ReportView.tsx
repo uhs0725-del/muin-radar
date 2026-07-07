@@ -101,8 +101,7 @@ export interface GyeonggiCatDetail {
   quarterSalesAmt?: number;
   monthlySalesAmt?: number;
   salesCnt?: number;
-  kakaoCount?: number;
-  perStoreMonthlyAmt?: number;
+  perTxnAmt?: number;
 }
 export interface GyeonggiPremium {
   trdar: GyeonggiTrdarInfo;
@@ -741,14 +740,14 @@ function GyeonggiPremiumSection({
 }) {
   const { trdar, categories } = premium;
   const withSales = categories.filter((c) => c.hasSales);
-  // 시뮬레이터 프리필용 — SeoulCatDetail 형태로 어댑트(label/perStoreMonthlyAmt만 사용됨).
+  // 시뮬레이터용 — 경기는 점포수 미제공 → 점포당 매출 프리필 불가. 사용자가 월매출 직접 입력.
   const simCats: SeoulCatDetail[] = withSales.map((c) => ({
     category: c.category,
     label: c.label,
     hasSales: true,
     approx: c.approx,
     basis: c.basis,
-    perStoreMonthlyAmt: c.perStoreMonthlyAmt,
+    // perStoreMonthlyAmt 없음 → 프리필 안 됨(placeholder로 직접 입력 유도).
   }));
   return (
     <section className="report-block mt-8 border-t-2 border-emerald-200 pt-5">
@@ -792,24 +791,24 @@ function GyeonggiPremiumSection({
                   )}
                 </div>
                 {c.approx && <p className="mt-0.5 text-xs text-slate-400">{c.basis}</p>}
-                <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
                   <Info
-                    label="점포당 월 추정매출"
-                    value={c.perStoreMonthlyAmt ? won(c.perStoreMonthlyAmt) : "산출 불가"}
+                    label="상권 업종 월 카드매출(총액)"
+                    value={won(c.monthlySalesAmt ?? 0)}
                   />
                   <Info label="상권 분기 매출" value={won(c.quarterSalesAmt ?? 0)} />
-                  <Info label="상권 월 매출(추정)" value={won(c.monthlySalesAmt ?? 0)} />
                   <Info
-                    label="점포당 분모(카카오)"
-                    value={c.kakaoCount !== undefined ? `${c.kakaoCount.toLocaleString()}곳` : "-"}
+                    label="건당 결제단가"
+                    value={c.perTxnAmt ? `${c.perTxnAmt.toLocaleString()}원/건` : "-"}
                   />
                 </div>
-                <p className="mt-2 text-[11px] text-slate-400">
-                  ❗경기 공공데이터에는 점포수가 없어, 점포당 월 추정매출 = 상권 분기 카드매출 ÷{" "}
-                  <b>카카오 반경 내 매장수</b> ÷ 3 으로 근사했습니다. 상권 매출의 집계 범위와 카카오
-                  매장 반경이 달라 실제 점포당 매출과 차이가 큽니다. 분기 결제 건수{" "}
-                  {(c.salesCnt ?? 0).toLocaleString()}건 · {trdar.salesAsOf.slice(0, 4)}년{" "}
-                  {trdar.salesAsOf.slice(4)}분기 카드매출.
+                <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+                  📌 <b>상권 업종 월 카드매출(총액)</b>은 이 상권(골목상권 단위) 해당 업종 전체의 월
+                  카드매출입니다. 경기 데이터는 상권 내 점포수를 제공하지 않아 <b>점포당 환산은
+                  제공하지 않습니다.</b> 상권 내 해당 업종 점포가 극소수인 골목상권에서는 총액이
+                  사실상 개별 점포 매출 수준입니다. 건당 결제단가 = 분기 카드매출 ÷ 분기 결제 건수(분모
+                  문제 없는 유효 지표). 분기 결제 건수 {(c.salesCnt ?? 0).toLocaleString()}건 ·{" "}
+                  {trdar.salesAsOf.slice(0, 4)}년 {trdar.salesAsOf.slice(4)}분기 카드매출.
                 </p>
               </div>
             ) : (
@@ -928,7 +927,12 @@ function RevenueSimulator({
         </p>
       )}
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SimInput label="월 매출(만원)" value={revenue} onChange={setRevenue} />
+        <SimInput
+          label="월 매출(만원)"
+          value={revenue}
+          onChange={setRevenue}
+          placeholder={prefill ? undefined : "월 예상 매출 입력"}
+        />
         <SimInput label="월세(만원)" value={rent} onChange={setRent} />
         <SimInput label="관리·재료비율(%)" value={costPct} onChange={setCostPct} />
         <SimInput label="초기투자(만원)" value={invest} onChange={setInvest} />
@@ -975,17 +979,22 @@ function SimInput({
   label,
   value,
   onChange,
+  placeholder,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
+  placeholder?: string;
 }) {
+  // placeholder가 있고 값이 0이면 빈 칸으로 두어 placeholder가 보이게(경기: 직접 입력 유도).
+  const shown = placeholder && value === 0 ? "" : Number.isFinite(value) ? value : 0;
   return (
     <label className="block">
       <span className="text-xs text-slate-500">{label}</span>
       <input
         type="number"
-        value={Number.isFinite(value) ? value : 0}
+        value={shown}
+        placeholder={placeholder}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
         className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm outline-none focus:border-slate-900"
       />

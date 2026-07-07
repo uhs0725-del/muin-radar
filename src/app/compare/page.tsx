@@ -15,7 +15,9 @@ interface CatMetric {
   nationalTopPct?: number;
   residTopPct?: number;
   flpopTopPct?: number;
-  perStoreMonthlyAmt?: number;
+  perStoreMonthlyAmt?: number; // 서울만
+  monthlySalesAmt?: number; // 경기 상권 월 카드매출 총액
+  perTxnAmt?: number; // 경기 건당 결제단가
   nightPct?: number;
 }
 interface Site {
@@ -371,6 +373,8 @@ function CompareResult({ data }: { data: CompareResp }) {
 function CatRows({ cat, sites }: { cat: { key: string; label: string }; sites: Site[] }) {
   const metricOf = (s: Site) => s.cats.find((c) => c.category === cat.key);
   const hasSales = sites.some((s) => (metricOf(s)?.perStoreMonthlyAmt ?? 0) > 0);
+  const hasGgSales = sites.some((s) => (metricOf(s)?.monthlySalesAmt ?? 0) > 0);
+  const hasTxn = sites.some((s) => (metricOf(s)?.perTxnAmt ?? 0) > 0);
   const hasNight = sites.some((s) => metricOf(s)?.nightPct !== undefined);
   return (
     <>
@@ -409,12 +413,28 @@ function CatRows({ cat, sites }: { cat: { key: string; label: string }; sites: S
         })}
       </Row>
       {hasSales && (
-        <Row label="  점포당 월매출(추정)">
+        <Row label="  점포당 월매출(추정, 서울)">
           {sites.map((s, i) => {
             const m = metricOf(s);
             return (
               <Cell key={i}>{m?.perStoreMonthlyAmt ? won(m.perStoreMonthlyAmt) : "-"}</Cell>
             );
+          })}
+        </Row>
+      )}
+      {hasGgSales && (
+        <Row label="  상권 월매출(총액, 경기)">
+          {sites.map((s, i) => {
+            const m = metricOf(s);
+            return <Cell key={i}>{m?.monthlySalesAmt ? won(m.monthlySalesAmt) : "-"}</Cell>;
+          })}
+        </Row>
+      )}
+      {hasTxn && (
+        <Row label="  건당 결제단가(경기)">
+          {sites.map((s, i) => {
+            const m = metricOf(s);
+            return <Cell key={i}>{m?.perTxnAmt ? won(m.perTxnAmt) : "-"}</Cell>;
           })}
         </Row>
       )}

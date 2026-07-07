@@ -11,7 +11,9 @@ export interface CompareCatMetric {
   nationalTopPct?: number; // 전국 상위 % (낮을수록 여유)
   residTopPct?: number; // 서울 거주 대비 상위 %
   flpopTopPct?: number; // 서울 유동 대비 상위 %
-  perStoreMonthlyAmt?: number; // 상권 카드매출 점포당 월 추정매출(원)
+  perStoreMonthlyAmt?: number; // 상권 카드매출 점포당 월 추정매출(원) — 서울만(경기는 점포수 미제공)
+  monthlySalesAmt?: number; // 상권 업종 월 카드매출 총액(원) — 경기 표시용
+  perTxnAmt?: number; // 건당 결제단가(원/건) — 경기 표시용
   nightPct?: number; // 심야 매출 비중 %(서울)
 }
 
@@ -59,7 +61,11 @@ export function toCompareSite(rep: DetailedReport): CompareSite {
       nationalTopPct: s?.nationalTopPct,
       residTopPct: s?.seoul?.residTopPct,
       flpopTopPct: s?.seoul?.flpopTopPct,
-      perStoreMonthlyAmt: sCat?.perStoreMonthlyAmt ?? gCat?.perStoreMonthlyAmt,
+      // 점포당 월매출은 서울만(경기는 상권 내 점포수 미제공 → 산출 불가).
+      perStoreMonthlyAmt: sCat?.perStoreMonthlyAmt,
+      // 경기는 상권 월 카드매출 총액 + 건당 결제단가로 표시.
+      monthlySalesAmt: gCat?.monthlySalesAmt,
+      perTxnAmt: gCat?.perTxnAmt,
       nightPct: sCat?.nightPct,
     };
   });
