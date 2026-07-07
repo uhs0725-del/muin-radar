@@ -20,7 +20,10 @@ export interface RankingRow {
   category: string;
   label: string;
   light: "green" | "yellow" | "red";
-  headroom: number; // 여유도 0~100 (100 - nationalTopPct)
+  // 여유도 0~100 = nationalTopPct 그 자체.
+  // nationalTopPct="전국 상위 X% 포화": 낮을수록 포화(여유 없음), 높을수록 여유.
+  // (엔진: topPct = 100 - 포화백분위 → 포화도 높으면 topPct 낮음.)
+  headroom: number;
   nationalTopPct: number;
   reason: string;
 }
@@ -45,16 +48,17 @@ export function rankCategories(inputs: RankingInput[]): RankingRow[] {
       i.nationalTopPct !== undefined,
   );
 
+  // 여유도 = nationalTopPct(높을수록 여유). 내림차순 정렬 → 여유 있는 업종이 1위.
   const sorted = [...scored].sort((a, b) => {
-    const ha = 100 - (a.nationalTopPct ?? 100);
-    const hb = 100 - (b.nationalTopPct ?? 100);
+    const ha = a.nationalTopPct ?? 0;
+    const hb = b.nationalTopPct ?? 0;
     if (hb !== ha) return hb - ha;
     return (a.count ?? 0) - (b.count ?? 0);
   });
 
   return sorted.map((i, idx) => {
-    const topPct = i.nationalTopPct ?? 100;
-    const headroom = Math.round((100 - topPct) * 10) / 10;
+    const topPct = i.nationalTopPct ?? 0;
+    const headroom = Math.round(topPct * 10) / 10;
     const light = (i.light ?? "yellow") as "green" | "yellow" | "red";
     return {
       rank: idx + 1,

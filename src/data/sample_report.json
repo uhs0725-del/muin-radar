@@ -15,7 +15,7 @@
  },
  "radiusM": 1000,
  "mode": "인구 정규화 ON · 중심 행정동 역삼1동 인구 34,205명 / 23,851세대 · 서울 상권: 강남역(253m) · 유동인구 반영 ON",
- "generatedAt": "2026-07-06T15:15:10.263Z",
+ "generatedAt": "2026-07-07T02:15:29.266Z",
  "categories": [
   {
    "category": "studycafe",
@@ -1009,7 +1009,10 @@
       "amt": 59101
      }
     ],
-    "yoyPct": -30
+    "yoyPct": -30,
+    "nightPct": 3.7,
+    "weekendPct": 7,
+    "nightVerdict": "심야 수요가 약해, 무인의 심야 무인건비 이점이 제한적입니다(주간 수요 중심 상권)."
    },
    {
     "category": "photobooth",
@@ -1076,16 +1079,67 @@
       "amt": 1694255
      }
     ],
-    "yoyPct": 4.6
+    "yoyPct": 4.6,
+    "nightPct": 19.5,
+    "weekendPct": 25.2,
+    "nightVerdict": "심야 매출이 어느 정도 발생해, 무인 심야 운영의 이점이 보통 수준입니다."
    }
   ]
  },
+ "gyeonggi": null,
  "rent": {
   "region": "서울",
   "perM2ThousandWon": 52.5,
   "nationwide": 20.6,
   "asOf": "20261"
  },
+ "ranking": [
+  {
+   "rank": 1,
+   "category": "icecream",
+   "label": "무인아이스크림",
+   "light": "green",
+   "headroom": 51.4,
+   "nationalTopPct": 51.4,
+   "reason": "반경 내 1곳으로 전국 상위 51.4% — 경쟁 여유(초록)"
+  },
+  {
+   "rank": 2,
+   "category": "laundry",
+   "label": "코인빨래방",
+   "light": "yellow",
+   "headroom": 25.2,
+   "nationalTopPct": 25.2,
+   "reason": "반경 내 16곳으로 전국 상위 25.2% — 경쟁 형성(주의) · 점포당 월 추정매출 1,515만원"
+  },
+  {
+   "rank": 3,
+   "category": "convenience",
+   "label": "편의점(전체)",
+   "light": "red",
+   "headroom": 15.1,
+   "nationalTopPct": 15.1,
+   "reason": "반경 내 148곳으로 전국 상위 15.1% — 이미 포화(빨강) · 점포당 월 추정매출 33,221만원"
+  },
+  {
+   "rank": 4,
+   "category": "photobooth",
+   "label": "무인사진관",
+   "light": "red",
+   "headroom": 9.6,
+   "nationalTopPct": 9.6,
+   "reason": "반경 내 15곳으로 전국 상위 9.6% — 이미 포화(빨강)"
+  },
+  {
+   "rank": 5,
+   "category": "studycafe",
+   "label": "스터디카페",
+   "light": "red",
+   "headroom": 9.2,
+   "nationalTopPct": 9.2,
+   "reason": "반경 내 38곳으로 전국 상위 9.2% — 이미 포화(빨강)"
+  }
+ ],
  "summary": "역삼1동 기준으로 스터디카페, 무인사진관, 편의점(전체)은(는) 포화 상태(빨강)로, 신규 진입 위험이 높습니다. 무인아이스크림은(는) 상대적으로 여유(초록)가 있어 검토 여지가 있습니다. 가장 주의가 필요한 업종은 스터디카페입니다.",
  "conclusions": [
   {

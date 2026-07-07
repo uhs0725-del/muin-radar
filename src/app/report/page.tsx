@@ -123,12 +123,20 @@ export default function ReportPage() {
         >
           ← 진단으로
         </button>
-        <button
-          onClick={() => window.print()}
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-        >
-          📄 PDF로 저장 / 인쇄
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/compare")}
+            className="text-sm text-slate-500 underline hover:text-slate-900"
+          >
+            🆚 후보지 비교
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+          >
+            📄 PDF로 저장 / 인쇄
+          </button>
+        </div>
       </div>
 
       <ReportView data={data} categoryKeys={ctx?.categories ?? []} showCoupang />

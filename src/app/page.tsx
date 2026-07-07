@@ -293,12 +293,21 @@ export default function Home() {
                 >
                   상세 리포트 보기 (₩{PRICES.report.toLocaleString("ko-KR")} · 14일 이용권)
                 </button>
-                <button
-                  onClick={() => router.push("/report/sample")}
-                  className="mt-2 w-full text-center text-xs text-slate-500 underline hover:text-slate-900"
-                >
-                  예시 리포트 먼저 보기
-                </button>
+                <div className="mt-2 flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => router.push("/report/sample")}
+                    className="text-center text-xs text-slate-500 underline hover:text-slate-900"
+                  >
+                    예시 리포트 먼저 보기
+                  </button>
+                  <span className="text-slate-300">·</span>
+                  <button
+                    onClick={() => router.push("/compare")}
+                    className="text-center text-xs text-slate-500 underline hover:text-slate-900"
+                  >
+                    🆚 후보지 비교하기
+                  </button>
+                </div>
                 <p className="mt-2 text-center text-xs text-slate-400">
                   {data.paid
                     ? "이용권이 활성화되어 있습니다."
