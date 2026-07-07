@@ -113,6 +113,15 @@ export interface RentInfo {
   nationwide: number;
   asOf: string;
 }
+export interface RankingRow {
+  rank: number;
+  category: string;
+  label: string;
+  light: "green" | "yellow" | "red";
+  headroom: number;
+  nationalTopPct: number;
+  reason: string;
+}
 
 export interface ReportData {
   ok: boolean;
@@ -131,6 +140,7 @@ export interface ReportData {
   seoul?: SeoulPremium | null;
   gyeonggi?: GyeonggiPremium | null;
   rent?: RentInfo | null;
+  ranking?: RankingRow[];
 }
 
 const LIGHT_DOT: Record<string, string> = {
@@ -200,6 +210,9 @@ export default function ReportView({
           · {data.mode}
         </div>
       </header>
+
+      {/* 이 위치 무인업종 적합도 랭킹 */}
+      {data.ranking && data.ranking.length > 0 && <RankingCard rows={data.ranking} />}
 
       {/* 종합 결론 */}
       {data.summary && (
@@ -389,6 +402,46 @@ export default function ReportView({
         </p>
       </footer>
     </>
+  );
+}
+
+// ── 이 위치 무인업종 적합도 랭킹 ─────────────────────────────────
+function RankingCard({ rows }: { rows: RankingRow[] }) {
+  const medal = (r: number) => (r === 1 ? "🥇" : r === 2 ? "🥈" : r === 3 ? "🥉" : `${r}`);
+  return (
+    <section className="report-block mt-5 rounded-2xl border-2 border-slate-900 p-4">
+      <div className="flex items-center gap-2">
+        <span className="text-lg">🏆</span>
+        <h2 className="text-base font-bold text-slate-900">이 위치 무인업종 적합도 랭킹</h2>
+      </div>
+      <p className="mt-0.5 text-xs text-slate-400">
+        측정 가능한 업종 전체를 이 반경으로 스캔해, 포화도가 낮은(여유 있는) 순으로 정렬했습니다.
+      </p>
+      <ol className="mt-3 space-y-2">
+        {rows.map((row) => (
+          <li
+            key={row.category}
+            className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 print:border print:border-slate-200 print:bg-white"
+          >
+            <span className="w-7 shrink-0 text-center text-lg font-bold text-slate-700">
+              {medal(row.rank)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-slate-900">{row.label}</span>
+                <span
+                  className={`inline-flex items-center gap-1 text-xs font-semibold ${LIGHT_TEXT[row.light]}`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${LIGHT_DOT[row.light]}`} />
+                  {LIGHT_KO[row.light]}
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{row.reason}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

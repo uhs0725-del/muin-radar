@@ -2,7 +2,8 @@
 // 검증된 사실: 카카오 로컬 API는 리뷰/평점 미제공 → 점수는 매장 밀도 기반.
 //             카카오 coord2regioncode 코드 == MOIS 행정동 코드(인구표 키).
 
-import { CATEGORY_MAP, type CategoryDef, type Measurable } from "./categories";
+import { CATEGORIES, CATEGORY_MAP, type CategoryDef, type Measurable } from "./categories";
+import { rankCategories, type RankingInput, type RankingRow } from "./ranking";
 import populationRaw from "@/data/population.json";
 import calibrationRaw from "@/data/calibration.json";
 import {
@@ -596,6 +597,7 @@ export interface DetailedReport {
   seoul?: SeoulPremium | null; // 서울이면 채워짐
   gyeonggi?: GyeonggiPremium | null; // 경기면 채워짐(서울과 배타적)
   rent?: RentInfo | null; // 소규모상가 시도 평균 임대료(전국 공통)
+  ranking?: RankingRow[]; // 이 위치 무인업종 적합도 랭킹(측정가능 전 업종, primary 반경)
 }
 
 // 반경 4개 × 업종 루프. 카카오 호출이 많아 무료 진단과 분리(유료 게이트 뒤에서만 호출).
@@ -675,6 +677,38 @@ export async function detailedReport(
   // 경기 프리미엄 섹션(상권 카드매출) — 서울이 아닐 때만.
   const gyeonggiPremium = ggMatch ? buildGyeonggiPremium(ggMatch, catKeys, kakaoCounts) : null;
 
+  // ── 업종 추천 랭킹: 측정가능 전 업종을 primary 반경으로 스캔 → 여유도 정렬 ──
+  // 선택 업종은 위에서 이미 계산한 score 재사용, 미선택 측정가능 업종만 추가 스캔(카카오 +N회).
+  const scanned = new Map<string, CategoryResult>();
+  for (const c of categories) scanned.set(c.category, c.primary);
+  const rankInputs: RankingInput[] = [];
+  for (const def of CATEGORIES) {
+    if (def.measurable === false) continue;
+    let comp = scanned.get(def.key);
+    if (!comp) {
+      comp = await collectCompetitors(def, geo.x, geo.y, radius, false);
+      if (comp.count !== null) {
+        comp.score = saturationScore(comp.count, radius, pop, def.key, seoulMatch);
+      }
+      scanned.set(def.key, comp);
+    }
+    if (comp.count === null || !comp.score) continue;
+    // 참고 병기: 상권 카드매출 점포당 월매출 + 심야 비중(서울/경기 프리미엄에서).
+    const sCat = seoulPremium?.categories.find((x) => x.category === def.key);
+    const gCat = gyeonggiPremium?.categories.find((x) => x.category === def.key);
+    rankInputs.push({
+      category: def.key,
+      label: def.label,
+      measurable: def.measurable,
+      count: comp.count,
+      light: comp.score.light,
+      nationalTopPct: comp.score.nationalTopPct,
+      perStoreMonthlyAmt: sCat?.perStoreMonthlyAmt ?? gCat?.perStoreMonthlyAmt,
+      nightPct: sCat?.nightPct,
+    });
+  }
+  const ranking = rankCategories(rankInputs);
+
   // 월세 가늠(전국 공통) — 소규모상가 시도 평균 임대료
   const rent = region ? rentForSi(region.si) : null;
 
@@ -700,6 +734,7 @@ export async function detailedReport(
     seoul: seoulPremium,
     gyeonggi: gyeonggiPremium,
     rent,
+    ranking,
   };
 }
 
