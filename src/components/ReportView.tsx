@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { coupangItemsFor, coupangSearchLink, COUPANG_DISCLOSURE } from "@/lib/coupang";
 import { estimateMonthlyRent } from "@/lib/rent";
+import { startupCostFor, STARTUP_ASOF } from "@/lib/startup";
 
 export interface Store {
   id: string;
@@ -861,9 +862,13 @@ function RevenueSimulator({
   const rentFill20 = rentInfo
     ? Math.round(estimateMonthlyRent(rentInfo.perM2ThousandWon, 20) / 10000)
     : null;
+  // 초기투자 시세: 프리필 업종의 창업비용(없으면 첫 업종). 만원 단위.
+  const startup =
+    startupCostFor(prefill?.category ?? "") ??
+    startupCostFor(categories[0]?.category ?? "");
   const [rent, setRent] = useState<number>(150); // 만원
   const [costPct, setCostPct] = useState<number>(35); // 관리·재료비율 %
-  const [invest, setInvest] = useState<number>(5000); // 초기투자 만원
+  const [invest, setInvest] = useState<number>(startup?.typical ?? 5000); // 초기투자 만원(시세 프리필)
 
   const rev = revenue * 10000;
   const rentW = rent * 10000;
@@ -881,14 +886,46 @@ function RevenueSimulator({
           : "월 매출 등을 입력하면 손익을 계산합니다."}{" "}
         무인 특성상 인건비는 0으로 가정합니다.
       </p>
-      {rentFill20 !== null && (
-        <button
-          type="button"
-          onClick={() => setRent(rentFill20)}
-          className="no-print mt-3 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-500"
-        >
-          월세 시세로 채우기 (20평 기준 {rentFill20.toLocaleString()}만원)
-        </button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {rentFill20 !== null && (
+          <button
+            type="button"
+            onClick={() => setRent(rentFill20)}
+            className="no-print rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-500"
+          >
+            월세 시세로 채우기 (20평 {rentFill20.toLocaleString()}만원)
+          </button>
+        )}
+        {startup && (
+          <button
+            type="button"
+            onClick={() => setInvest(startup.typical)}
+            className="no-print rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-500"
+          >
+            창업비용 시세로 채우기 ({startup.label} {startup.typical.toLocaleString()}만원)
+          </button>
+        )}
+      </div>
+      {startup && (
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+          💰 <b>{startup.label} 초기 창업비용 시세</b> {startup.min.toLocaleString()}~
+          {startup.max.toLocaleString()}만원(대표값 {startup.typical.toLocaleString()}만원, 시세
+          기준·수정 가능). {startup.note} 출처:{" "}
+          {startup.sources.map((s, i) => (
+            <span key={s}>
+              {i > 0 && ", "}
+              <a
+                href={s}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-slate-600"
+              >
+                [{i + 1}]
+              </a>
+            </span>
+          ))}{" "}
+          · {STARTUP_ASOF} 기준. 개별 매물·브랜드·평형에 따라 편차가 큽니다.
+        </p>
       )}
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SimInput label="월 매출(만원)" value={revenue} onChange={setRevenue} />

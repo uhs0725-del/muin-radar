@@ -1,0 +1,62 @@
+{
+  "_note": "무인업종 초기 창업비용 시세(만원, 보증금·인테리어·장비·초기재고 포함 대략치). 개별 매물/브랜드/평형에 따라 편차 큼. 시뮬레이터 초기투자 프리필용(수정 가능). 2026-07-07 웹 리서치.",
+  "_asOf": "2026-07",
+  "_unit": "만원",
+  "costs": {
+    "icecream": {
+      "label": "무인아이스크림",
+      "min": 3500,
+      "max": 8000,
+      "typical": 5000,
+      "note": "8~10평 기준(키오스크 600~700, 냉동쇼케이스, 초기재고 300~1,000, 보증금 포함). 프랜차이즈 5,000만원 이상, 개인은 절감.",
+      "sources": [
+        "https://blog.hansungshowcase.kr/muinjeotpochateok-2026nyeon-hyeonsil-biyotgwa-jinjja-suikryul-15nyeoncha-jeonmun",
+        "http://www.ice24.co.kr/franchise/franchise_price.php"
+      ]
+    },
+    "laundry": {
+      "label": "코인빨래방",
+      "min": 5000,
+      "max": 12000,
+      "typical": 8000,
+      "note": "세탁기 6~8대+건조기 4~6대(세트 ~4,000), 전기·배관 증설, 인테리어, 보증금 포함. 장비가 창업비의 60% 이상. 입지·전력증설에 따라 1억 초과 사례.",
+      "sources": [
+        "https://ssjum.com/startup-guide-laundry.html",
+        "https://www.junsungki.com/magazine/post-detail.do?id=3485"
+      ]
+    },
+    "photobooth": {
+      "label": "무인사진관",
+      "min": 5000,
+      "max": 15000,
+      "typical": 7000,
+      "note": "12~15평·기계 3대(1,500~2,000/대), 인테리어 비중 큼. 프리미엄 상권은 1.8억~3억 사례. 인생네컷 가맹점 평균 창업비 ~1억(공정위 정보공개서).",
+      "sources": [
+        "https://www.consumernews.co.kr/news/articleView.html?idxno=716682",
+        "https://butterflyinvest.com/%EC%9D%B8%EC%83%9D%EB%84%A4%EC%BB%B7-%EC%B0%BD%EC%97%85%EB%B9%84%EC%9A%A9-%EC%88%98%EC%9D%B5-%EB%B6%84%EC%84%9D-%EB%B0%8F-%EC%A3%BC%EC%9D%98%EC%A0%90/"
+      ]
+    },
+    "studycafe": {
+      "label": "스터디카페",
+      "min": 8000,
+      "max": 20000,
+      "typical": 12000,
+      "note": "50평 기준 인테리어·집기 평당 200~300만원. 무인 스터디카페 총 투자 최대 2억 사례(개인/프랜차이즈 편차). 공정위 정보공개서 기준.",
+      "sources": [
+        "https://goojic.com/study-cafe/",
+        "https://www.keyzard.cc/lookeconomy/nb/223999415404"
+      ]
+    },
+    "convenience": {
+      "label": "편의점(무인·하이브리드)",
+      "min": 7000,
+      "max": 14000,
+      "typical": 10000,
+      "note": "GS25 평균 ~7,300(가맹비 770·보증금 5,000·인테리어 1,500)·이마트24 ~1.4억(가맹비 2,370·보증금 5,000). 하이브리드=주간 유인+야간 무인. 무인 전용 출점은 정체.",
+      "sources": [
+        "https://rank.intoday.kr/471",
+        "https://nnythink.com/entry/%E2%80%9C2025%EB%85%84-%EC%9D%B4%EB%A7%88%ED%8A%B824-%EC%B0%BD%EC%97%85%EB%B9%84%EC%9A%A9-%ED%95%9C%EB%88%88%EC%A0%95%EB%A6%AC%E2%80%9D"
+      ]
+    }
+  }
+}
