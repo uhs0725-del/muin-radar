@@ -78,6 +78,9 @@ export interface SeoulCatDetail {
   storesAsOf?: string;
   trend?: { quarter: string; amt: number }[];
   yoyPct?: number | null;
+  nightPct?: number;
+  weekendPct?: number;
+  nightVerdict?: string;
 }
 export interface SeoulPremium {
   trdar: SeoulTrdarInfo;
@@ -609,6 +612,26 @@ function SeoulPremiumSection({
                   />
                 </div>
 
+                {/* 무인 특화: 심야·주말 매출 비중 + 규칙 판정 */}
+                {c.nightPct !== undefined && (
+                  <div className="mt-3 rounded-xl bg-slate-50 p-3 print:border print:border-slate-300 print:bg-white">
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className="font-semibold text-slate-700">
+                        🌙 심야 매출 비중 <span className="text-indigo-700">{c.nightPct}%</span>
+                        <span className="ml-1 text-xs font-normal text-slate-400">(21~06시)</span>
+                      </span>
+                      {c.weekendPct !== undefined && (
+                        <span className="font-semibold text-slate-700">
+                          · 주말 <span className="text-indigo-700">{c.weekendPct}%</span>
+                        </span>
+                      )}
+                    </div>
+                    {c.nightVerdict && (
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">{c.nightVerdict}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* 분기 매출 추이 스파크라인 */}
                 {c.trend && c.trend.length >= 2 && (
                   <SalesTrend trend={c.trend} yoyPct={c.yoyPct ?? null} />
@@ -693,6 +716,7 @@ function GyeonggiPremiumSection({
         <p className="mt-2 text-xs text-slate-400">
           경기 상권은 상권명 지오코딩으로 좌표를 추정하므로 위치 정밀도가 서울보다 낮을 수
           있습니다. 유동인구·점포수 데이터는 경기 공공데이터에 없어 제공되지 않습니다.
+          🌙 심야·주말 매출 비중(시간대 데이터)은 현재 <b>서울만 제공</b>됩니다.
         </p>
       </div>
 

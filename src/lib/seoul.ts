@@ -33,6 +33,8 @@ interface FlpopEntry {
 interface SalesEntry {
   amt: number;
   cnt: number;
+  nightPct?: number; // 심야(21~06시) 매출 비중 %
+  weekendPct?: number; // 주말 매출 비중 %
 }
 interface StoreEntry {
   stores: number;

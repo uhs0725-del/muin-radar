@@ -546,6 +546,10 @@ export interface SeoulCatDetail {
   // 분기 매출 추이(최근 8분기, 상권×업종 카드매출 만원). 스파크라인용.
   trend?: { quarter: string; amt: number }[];
   yoyPct?: number | null; // 전년동기 대비 상권 매출 증감%(최신 vs 4분기 전)
+  // 무인 특화: 심야(21~06시)·주말 매출 비중(서울만) + 규칙 기반 한줄 판정.
+  nightPct?: number;
+  weekendPct?: number;
+  nightVerdict?: string;
 }
 export interface SeoulPremium {
   trdar: SeoulTrdarInfo;
@@ -699,6 +703,17 @@ export async function detailedReport(
   };
 }
 
+// 심야 매출 비중 → 무인 운영 이점 판정(규칙 기반, LLM 없음).
+export function nightVerdictFor(nightPct: number): string {
+  if (nightPct >= 30) {
+    return "심야 매출 비중이 높아 무인 24시간 운영 이점이 큰 상권입니다(인건비 없이 심야 수요 흡수).";
+  }
+  if (nightPct >= 15) {
+    return "심야 매출이 어느 정도 발생해, 무인 심야 운영의 이점이 보통 수준입니다.";
+  }
+  return "심야 수요가 약해, 무인의 심야 무인건비 이점이 제한적입니다(주간 수요 중심 상권).";
+}
+
 // 서울 상권 카드매출/점포/유동인구 프리미엄 섹션 구성.
 function buildSeoulPremium(match: SeoulMatch, catKeys: string[]): SeoulPremium {
   const fl = flpopOf(match.trdarCd);
@@ -777,6 +792,10 @@ function buildSeoulPremium(match: SeoulMatch, catKeys: string[]): SeoulPremium {
       storesAsOf: SEOUL_ASOF.stores,
       trend,
       yoyPct,
+      nightPct: sale?.nightPct,
+      weekendPct: sale?.weekendPct,
+      nightVerdict:
+        sale?.nightPct !== undefined ? nightVerdictFor(sale.nightPct) : undefined,
     });
   }
   return { trdar, categories: cats };
