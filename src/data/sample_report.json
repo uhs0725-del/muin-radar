@@ -15,7 +15,7 @@
  },
  "radiusM": 1000,
  "mode": "인구 정규화 ON · 중심 행정동 역삼1동 인구 34,205명 / 23,851세대 · 서울 상권: 강남역(253m) · 유동인구 반영 ON",
- "generatedAt": "2026-07-07T02:15:29.266Z",
+ "generatedAt": "2026-07-07T03:52:26.968Z",
  "categories": [
   {
    "category": "studycafe",
@@ -915,15 +915,15 @@
     },
     {
      "radiusM": 2000,
-     "count": 440,
-     "storesPer10kPop": 128.6,
-     "nationalTopPct": 18.2,
+     "count": 441,
+     "storesPer10kPop": 128.9,
+     "nationalTopPct": 18.1,
      "light": "red"
     },
     {
      "radiusM": 3000,
-     "count": 783,
-     "storesPer10kPop": 228.9,
+     "count": 784,
+     "storesPer10kPop": 229.2,
      "nationalTopPct": 19.7,
      "light": "red"
     }
@@ -1140,6 +1140,34 @@
    "reason": "반경 내 38곳으로 전국 상위 9.2% — 이미 포화(빨강)"
   }
  ],
+ "dongSales": {
+  "region": "seoul",
+  "dongName": "역삼1동",
+  "regionCode": "1168064000",
+  "pop": 34205,
+  "totalMonthlyAmt": 171624806539,
+  "totalPer10kPop": 50175356392,
+  "asOf": "2026년 1분기(월 환산)",
+  "asOfKind": "seoul",
+  "categories": [
+   {
+    "category": "laundry",
+    "label": "코인빨래방",
+    "monthlyAmt": 322931640,
+    "per10kPop": 94410653,
+    "approx": true,
+    "basis": "세탁소 분류(무인 코인빨래방 외 일반 세탁소 포함)"
+   },
+   {
+    "category": "convenience",
+    "label": "편의점(전체)",
+    "monthlyAmt": 8501853460,
+    "per10kPop": 2485558679,
+    "approx": false,
+    "basis": "편의점(서울 62종 직접 매핑)"
+   }
+  ]
+ },
  "summary": "역삼1동 기준으로 스터디카페, 무인사진관, 편의점(전체)은(는) 포화 상태(빨강)로, 신규 진입 위험이 높습니다. 무인아이스크림은(는) 상대적으로 여유(초록)가 있어 검토 여지가 있습니다. 가장 주의가 필요한 업종은 스터디카페입니다.",
  "conclusions": [
   {

@@ -122,6 +122,25 @@ export interface RankingRow {
   nationalTopPct: number;
   reason: string;
 }
+export interface DongCatAmt {
+  category: string;
+  label: string;
+  monthlyAmt: number;
+  per10kPop: number | null;
+  approx: boolean;
+  basis: string;
+}
+export interface DongSales {
+  region: "seoul" | "gg";
+  dongName: string;
+  regionCode: string;
+  pop: number | null;
+  totalMonthlyAmt: number;
+  totalPer10kPop: number | null;
+  asOf: string;
+  asOfKind: "seoul" | "gg";
+  categories: DongCatAmt[];
+}
 
 export interface ReportData {
   ok: boolean;
@@ -141,6 +160,7 @@ export interface ReportData {
   gyeonggi?: GyeonggiPremium | null;
   rent?: RentInfo | null;
   ranking?: RankingRow[];
+  dongSales?: DongSales | null;
 }
 
 const LIGHT_DOT: Record<string, string> = {
@@ -343,6 +363,9 @@ export default function ReportView({
         );
       })}
 
+      {/* 동네 수요 규모 — 행정동 단위 카드매출(서울·경기 공통 기준, 후보지 비교용) */}
+      {data.dongSales && <DongSalesSection dong={data.dongSales} />}
+
       {/* 월세 가늠 (전국 공통) */}
       {data.rent && <RentSection rent={data.rent} regionSi={data.region?.si} />}
 
@@ -526,6 +549,92 @@ function SalesTrend({
         분기 카드매출 추정 추이 — 상권 단위이며 점포수 변화 미반영.
       </p>
     </div>
+  );
+}
+
+// ── 동네 수요 규모 섹션 — 행정동 단위 카드매출(서울·경기 공통 기준) ──────────
+// 서울(점포당)·경기(상권총액)로 기준이 달라 불가했던 "후보지 간 매출 비교"를
+// 행정동 전체 카드매출 + 인구 1만명당으로 동일 기준 복원. (상권보다 넓은 범위)
+function DongSalesSection({ dong }: { dong: DongSales }) {
+  const srcLabel =
+    dong.region === "seoul"
+      ? "서울 열린데이터광장 상권분석(행정동 카드매출)"
+      : "경기데이터드림 카드매출 행정동 집계";
+  return (
+    <section className="report-block mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 print:bg-white">
+      <div className="flex items-center gap-2">
+        <span className="rounded bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white">
+          동네 수요 규모
+        </span>
+        <h2 className="text-base font-bold text-slate-900">
+          {dong.dongName} 행정동 월 카드매출
+        </h2>
+        <span className="ml-auto text-xs text-slate-400">기준 {dong.asOf}</span>
+      </div>
+
+      {/* 전체 총액 + 1만명당 (공통 기준 핵심 지표) */}
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-emerald-200 bg-white p-3">
+          <div className="text-xs text-slate-500">행정동 전체 월 카드매출</div>
+          <div className="mt-0.5 text-lg font-bold text-slate-900">
+            {won(dong.totalMonthlyAmt)}
+          </div>
+        </div>
+        <div className="rounded-xl border border-emerald-200 bg-white p-3">
+          <div className="text-xs text-slate-500">인구 1만명당 월 카드매출</div>
+          <div className="mt-0.5 text-lg font-bold text-slate-900">
+            {dong.totalPer10kPop != null ? won(dong.totalPer10kPop) : "-"}
+          </div>
+          {dong.pop != null && (
+            <div className="text-[11px] text-slate-400">거주 {dong.pop.toLocaleString()}명 기준</div>
+          )}
+        </div>
+      </div>
+
+      {/* 업종별 행정동 카드매출 */}
+      {dong.categories.length > 0 && (
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-emerald-200 text-left text-xs text-slate-500">
+                <th className="py-1.5 pr-3 font-medium">업종</th>
+                <th className="py-1.5 pr-3 font-medium">행정동 월 카드매출</th>
+                <th className="py-1.5 pr-3 font-medium">인구 1만명당</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dong.categories.map((c) => (
+                <tr key={c.category} className="border-b border-emerald-100">
+                  <td className="py-1.5 pr-3 text-slate-700">
+                    {c.label}
+                    {c.approx && <span className="ml-1 text-[10px] text-amber-600">근사</span>}
+                  </td>
+                  <td className="py-1.5 pr-3 font-semibold text-slate-900">{won(c.monthlyAmt)}</td>
+                  <td className="py-1.5 pr-3 text-slate-700">
+                    {c.per10kPop != null ? won(c.per10kPop) : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {dong.categories.some((c) => c.approx) && (
+            <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+              ‘근사’ 업종은 카드사 업종 분류 기준으로, 무인 매장만 골라낸 값이 아니라 해당 분류
+              전체(일반 매장 포함) 카드매출입니다.
+            </p>
+          )}
+        </div>
+      )}
+
+      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+        ※ 행정동은 상권보다 넓은 범위입니다(중심 행정동 전체 기준). 서울·경기 공통 기준이라 후보지 간
+        <b> ‘동네 수요 규모’ 비교</b>에 쓰입니다(후보지 비교 메뉴).
+        {dong.asOfKind === "gg" &&
+          ` 경기는 ${dong.asOf} 기준으로, 서울(분기 기준)과 데이터 시점이 다를 수 있습니다.`}
+        <br />
+        데이터 출처: {srcLabel}. 카드 결제 기준 추정치로 현금·계좌이체 매출은 제외됩니다.
+      </p>
+    </section>
   );
 }
 

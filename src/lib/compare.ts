@@ -15,6 +15,9 @@ export interface CompareCatMetric {
   monthlySalesAmt?: number; // 상권 업종 월 카드매출 총액(원) — 경기 표시용
   perTxnAmt?: number; // 건당 결제단가(원/건) — 경기 표시용
   nightPct?: number; // 심야 매출 비중 %(서울)
+  // 행정동 단위 카드매출(서울·경기 공통 기준!) — 후보지 매출 비교의 핵심.
+  dongMonthlyAmt?: number; // 행정동 업종 월 카드매출 총액(원)
+  dongPer10k?: number | null; // 인구 1만명당 월 카드매출(원)
 }
 
 export interface CompareSite {
@@ -27,6 +30,12 @@ export interface CompareSite {
   trdarName?: string; // 서울/경기 최근접 상권
   flpopTot?: number; // 서울 유동인구
   rentPerM2?: number; // 소규모상가 ㎡당 월임대료(천원)
+  // 행정동 단위 카드매출(서울·경기 공통 기준). 후보지 매출 비교 복원의 핵심.
+  dongRegion?: "seoul" | "gg" | null;
+  dongTotalMonthlyAmt?: number; // 행정동 전체 월 카드매출(원)
+  dongTotalPer10k?: number | null; // 인구 1만명당 월 카드매출(원)
+  dongAsOf?: string; // 기준시점(서울 2026Q1 / 경기 2023-12 — 혼합 비교 시 각주)
+  dongAsOfKind?: "seoul" | "gg";
   cats: CompareCatMetric[];
   // 종합 점수용 — 측정업종 평균 여유도(높을수록 여유). 판정 근거.
   avgHeadroom: number | null;
@@ -52,6 +61,7 @@ export function toCompareSite(rep: DetailedReport): CompareSite {
     const s = c.primary.score;
     const sCat = rep.seoul?.categories.find((x) => x.category === c.category);
     const gCat = rep.gyeonggi?.categories.find((x) => x.category === c.category);
+    const dCat = rep.dongSales?.categories.find((x) => x.category === c.category);
     return {
       category: c.category,
       label: c.label,
@@ -67,6 +77,9 @@ export function toCompareSite(rep: DetailedReport): CompareSite {
       monthlySalesAmt: gCat?.monthlySalesAmt,
       perTxnAmt: gCat?.perTxnAmt,
       nightPct: sCat?.nightPct,
+      // 행정동 단위(서울·경기 공통 기준) — 동일 기준 비교.
+      dongMonthlyAmt: dCat?.monthlyAmt,
+      dongPer10k: dCat?.per10kPop,
     };
   });
 
@@ -97,6 +110,11 @@ export function toCompareSite(rep: DetailedReport): CompareSite {
     trdarName: rep.seoul?.trdar.trdarName ?? rep.gyeonggi?.trdar.trdarName,
     flpopTot: rep.seoul?.trdar.flpopTot,
     rentPerM2: rep.rent?.perM2ThousandWon,
+    dongRegion: rep.dongSales?.region ?? null,
+    dongTotalMonthlyAmt: rep.dongSales?.totalMonthlyAmt,
+    dongTotalPer10k: rep.dongSales?.totalPer10kPop,
+    dongAsOf: rep.dongSales?.asOf,
+    dongAsOfKind: rep.dongSales?.asOfKind,
     cats,
     avgHeadroom,
     worstLight,
@@ -159,6 +177,28 @@ function buildVerdict(
     parts.push(
       `${cat.label}은(는) ${siteName(sites[bestForCat.i])}이(가) 상위 ${bestForCat.m!.nationalTopPct}%로 가장 여유 있습니다.`,
     );
+  }
+
+  // 동네 수요 규모(행정동 전체 월 카드매출) — 서울·경기 공통 기준. 후보지 매출 비교의 핵심.
+  const withDong = sites
+    .map((s, i) => ({ i, s }))
+    .filter((x) => typeof x.s.dongTotalMonthlyAmt === "number");
+  if (withDong.length >= 2) {
+    const top = withDong.reduce((a, b) =>
+      (b.s.dongTotalMonthlyAmt ?? 0) > (a.s.dongTotalMonthlyAmt ?? 0) ? b : a,
+    );
+    const amtEok = Math.round((top.s.dongTotalMonthlyAmt ?? 0) / 1e8);
+    parts.push(
+      `동네 전체 소비 규모(행정동 월 카드매출)는 ${siteName(sites[top.i])}이(가) 가장 커(약 ${amtEok.toLocaleString()}억원/월) 배후 수요가 두텁습니다.`,
+    );
+    const kinds = new Set(withDong.map((x) => x.s.dongAsOfKind));
+    if (kinds.size > 1) {
+      const sAsOf = withDong.find((x) => x.s.dongAsOfKind === "seoul")?.s.dongAsOf;
+      const gAsOf = withDong.find((x) => x.s.dongAsOfKind === "gg")?.s.dongAsOf;
+      parts.push(
+        `※ 매출 비교 각주: 서울(${sAsOf ?? "분기"})과 경기(${gAsOf ?? "월"})는 데이터 기준시점이 달라 규모 비교는 참고용입니다.`,
+      );
+    }
   }
 
   // 심야(서울) 우위 짚기

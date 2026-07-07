@@ -25,6 +25,7 @@ import {
   GG_ASOF,
   type GgMatch,
 } from "./gyeonggi";
+import { buildDongSales, type DongSales } from "./dong";
 
 const POPULATION = populationRaw as unknown as Record<string, [number, number]>; // code -> [pop, sede]
 
@@ -598,6 +599,7 @@ export interface DetailedReport {
   gyeonggi?: GyeonggiPremium | null; // 경기면 채워짐(서울과 배타적)
   rent?: RentInfo | null; // 소규모상가 시도 평균 임대료(전국 공통)
   ranking?: RankingRow[]; // 이 위치 무인업종 적합도 랭킹(측정가능 전 업종, primary 반경)
+  dongSales?: DongSales | null; // 행정동 단위 카드매출(서울·경기 공통 기준) — 후보지 비교용. 그 외 지역 null.
 }
 
 // 반경 4개 × 업종 루프. 카카오 호출이 많아 무료 진단과 분리(유료 게이트 뒤에서만 호출).
@@ -708,6 +710,9 @@ export async function detailedReport(
   // 월세 가늠(전국 공통) — 소규모상가 시도 평균 임대료
   const rent = region ? rentForSi(region.si) : null;
 
+  // 행정동 단위 카드매출(서울·경기 공통 기준) — 후보지 매출 비교 복원용.
+  const dongSales = buildDongSales(region?.code, region?.dong, pop, catKeys);
+
   const regionSuffix = seoulMatch
     ? ` · 서울 상권: ${seoulMatch.name}(${seoulMatch.distanceM}m) · 유동인구 반영 ON`
     : ggMatch
@@ -731,6 +736,7 @@ export async function detailedReport(
     gyeonggi: gyeonggiPremium,
     rent,
     ranking,
+    dongSales,
   };
 }
 

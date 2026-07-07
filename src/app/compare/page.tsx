@@ -19,6 +19,8 @@ interface CatMetric {
   monthlySalesAmt?: number; // 경기 상권 월 카드매출 총액
   perTxnAmt?: number; // 경기 건당 결제단가
   nightPct?: number;
+  dongMonthlyAmt?: number; // 행정동 업종 월 카드매출(서울·경기 공통)
+  dongPer10k?: number | null; // 인구 1만명당(원)
 }
 interface Site {
   address: string;
@@ -30,6 +32,11 @@ interface Site {
   trdarName?: string;
   flpopTot?: number;
   rentPerM2?: number;
+  dongRegion?: "seoul" | "gg" | null;
+  dongTotalMonthlyAmt?: number;
+  dongTotalPer10k?: number | null;
+  dongAsOf?: string;
+  dongAsOfKind?: "seoul" | "gg";
   cats: CatMetric[];
   avgHeadroom: number | null;
   worstLight: "green" | "yellow" | "red" | null;
@@ -353,13 +360,50 @@ function CompareResult({ data }: { data: CompareResp }) {
               ))}
             </Row>
 
-            {/* 업종별 신호등/매장수/상위%/심야/점포당매출 */}
+            {/* ── 동네 수요 규모(행정동 카드매출) — 서울·경기 공통 기준 ── */}
+            {sites.some((s) => typeof s.dongTotalMonthlyAmt === "number") && (
+              <>
+                <tr className="border-t-2 border-emerald-300 bg-emerald-50 print:bg-white">
+                  <td
+                    className="py-1.5 pr-3 text-xs font-bold text-emerald-800"
+                    colSpan={sites.length + 1}
+                  >
+                    💳 동네 수요 규모 — 행정동 월 카드매출 (서울·경기 공통 기준)
+                  </td>
+                </tr>
+                <Row label="  행정동 전체 월매출">
+                  {sites.map((s, i) => (
+                    <Cell key={i}>
+                      {typeof s.dongTotalMonthlyAmt === "number" ? won(s.dongTotalMonthlyAmt) : "-"}
+                    </Cell>
+                  ))}
+                </Row>
+                <Row label="  인구 1만명당 월매출">
+                  {sites.map((s, i) => (
+                    <Cell key={i}>
+                      {s.dongTotalPer10k != null ? won(s.dongTotalPer10k) : "-"}
+                    </Cell>
+                  ))}
+                </Row>
+              </>
+            )}
+
+            {/* 업종별 신호등/매장수/상위%/심야/점포당매출/행정동매출 */}
             {categories.map((cat) => (
               <CatRows key={cat.key} cat={cat} sites={sites} />
             ))}
           </tbody>
         </table>
       </div>
+
+      {mixedDongAsOf(sites) && (
+        <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-700 print:bg-white">
+          ※ 행정동 카드매출 기준시점: 서울{" "}
+          {sites.find((s) => s.dongAsOfKind === "seoul")?.dongAsOf ?? "분기"} · 경기{" "}
+          {sites.find((s) => s.dongAsOfKind === "gg")?.dongAsOf ?? "월"}. 데이터 출처가 달라
+          서울↔경기 규모 비교는 참고용입니다(같은 지역끼리 비교가 정확).
+        </p>
+      )}
 
       <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
         신호등·상위%는 전국 행정동 표본 분포 대비 백분위(낮을수록 여유), 카드매출·유동인구·심야
@@ -376,6 +420,7 @@ function CatRows({ cat, sites }: { cat: { key: string; label: string }; sites: S
   const hasGgSales = sites.some((s) => (metricOf(s)?.monthlySalesAmt ?? 0) > 0);
   const hasTxn = sites.some((s) => (metricOf(s)?.perTxnAmt ?? 0) > 0);
   const hasNight = sites.some((s) => metricOf(s)?.nightPct !== undefined);
+  const hasDong = sites.some((s) => typeof metricOf(s)?.dongMonthlyAmt === "number");
   return (
     <>
       <tr className="border-t-2 border-slate-200 bg-slate-50 print:bg-white">
@@ -446,8 +491,36 @@ function CatRows({ cat, sites }: { cat: { key: string; label: string }; sites: S
           })}
         </Row>
       )}
+      {hasDong && (
+        <>
+          <Row label="  행정동 월매출(공통 기준)">
+            {sites.map((s, i) => {
+              const m = metricOf(s);
+              return (
+                <Cell key={i}>
+                  {typeof m?.dongMonthlyAmt === "number" ? won(m.dongMonthlyAmt) : "-"}
+                </Cell>
+              );
+            })}
+          </Row>
+          <Row label="  행정동 1만명당">
+            {sites.map((s, i) => {
+              const m = metricOf(s);
+              return <Cell key={i}>{m?.dongPer10k != null ? won(m.dongPer10k) : "-"}</Cell>;
+            })}
+          </Row>
+        </>
+      )}
     </>
   );
+}
+
+// 후보 중 서울·경기가 섞여 행정동 매출 기준시점이 다른가?
+function mixedDongAsOf(sites: Site[]): boolean {
+  const kinds = new Set(
+    sites.map((s) => s.dongAsOfKind).filter((k): k is "seoul" | "gg" => !!k),
+  );
+  return kinds.size > 1;
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
