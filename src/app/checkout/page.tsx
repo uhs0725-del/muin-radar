@@ -73,20 +73,24 @@ function CheckoutInner() {
 
       <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h1 className="text-lg font-bold text-slate-900">
-          상세 리포트(PDF) + 30일 무제한 진단
+          상세 리포트(PDF) + 14일 무제한 진단
         </h1>
         <p className="mt-1 text-sm text-slate-500">
           선택 업종의 경쟁 매장 전체 리스트(거리 포함), 4개 반경(500m·1km·2km·3km) 비교 테이블,
-          종합 결론을 A4 인쇄용 리포트로 제공합니다. 결제하면 30일간 무료 진단 횟수 제한 없이
+          종합 결론을 A4 인쇄용 리포트로 제공합니다. 결제하면 14일간 무료 진단 횟수 제한 없이
           이용할 수 있어요.
         </p>
         <p className="mt-1 text-xs text-slate-400">
-          30일 이용권입니다(자동갱신 아님). 결제한 브라우저에서 이용하세요 — 계정이 없어 쿠키를
+          14일 이용권입니다(자동갱신 아님). 결제한 브라우저에서 이용하세요 — 계정이 없어 쿠키를
           삭제하거나 다른 브라우저에서는 이용권이 인식되지 않습니다.
         </p>
         <p className="mt-3 text-2xl font-extrabold text-slate-900">
           ₩{PRICES.report.toLocaleString("ko-KR")}{" "}
-          <span className="text-sm font-medium text-slate-400">· 30일 이용권</span>
+          <span className="text-sm font-medium text-slate-400">· 14일 이용권</span>
+        </p>
+        <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-500">
+          시중 상권분석 단건 리포트 <b>55,000원</b>(나이스비즈맵 프리미엄) 상당의 분석을 즉시
+          발급합니다.
         </p>
       </div>
 

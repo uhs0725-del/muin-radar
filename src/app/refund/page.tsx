@@ -19,7 +19,7 @@ export default function RefundPage() {
         <section>
           <h2 className="text-base font-bold text-slate-900">제1조 (환불 대상 상품)</h2>
           <p className="mt-2">
-            본 규정은 민트초코자전거(이하 &ldquo;회사&rdquo;)가 제공하는 유료 이용권(₩9,900 · 30일
+            본 규정은 민트초코자전거(이하 &ldquo;회사&rdquo;)가 제공하는 유료 이용권(₩19,900 · 14일
             무제한 진단 + 상세 리포트 PDF 열람, 자동갱신 아님)에 적용됩니다.
           </p>
         </section>

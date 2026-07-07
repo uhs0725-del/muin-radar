@@ -4,7 +4,7 @@ import { ENT_COOKIE, ENT_TTL_DAYS, signEntitlement } from "@/lib/entitlement";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// 오너(관리자) 그랜트 키 — 프로덕션에서 ?key= 로 맞으면 30일 이용권 발급.
+// 오너(관리자) 그랜트 키 — 프로덕션에서 ?key= 로 맞으면 14일 이용권 발급.
 // env 우선 + fallback(Private 레포, 엔타이틀먼트/카카오 키와 동일 패턴).
 const ADMIN_GRANT_KEY =
   process.env.ADMIN_GRANT_KEY || "mr-owner-7d1f4c9a2b";
@@ -28,7 +28,7 @@ function grant(req: NextRequest) {
     ok: true,
     granted: true,
     ttlDays: ENT_TTL_DAYS,
-    note: "이 브라우저에 30일 이용권 쿠키가 발급되었습니다. 홈으로 이동해 사용하세요.",
+    note: "이 브라우저에 14일 이용권 쿠키가 발급되었습니다. 홈으로 이동해 사용하세요.",
   });
   res.cookies.set(ENT_COOKIE, token, {
     httpOnly: true,

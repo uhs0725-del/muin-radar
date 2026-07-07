@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * 상세 리포트 데이터 — 유료 게이트. 엔타이틀먼트 쿠키(₩9,900 결제) 없으면 402.
+ * 상세 리포트 데이터 — 유료 게이트. 엔타이틀먼트 쿠키(₩19,900 결제) 없으면 402.
  * 4개 반경 비교 + 전체 경쟁매장 리스트(거리) + 규칙 기반 종합 결론.
  */
 export async function POST(req: NextRequest) {

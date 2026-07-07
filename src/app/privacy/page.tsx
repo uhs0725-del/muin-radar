@@ -41,7 +41,7 @@ export default function PrivacyPage() {
               <b>서비스 쿠키(2종)</b> — 개인을 식별하지 않는 기능용 쿠키입니다.
               <ul className="mt-1.5 list-disc space-y-1 pl-5 text-slate-600">
                 <li>무료 진단 횟수 카운트용 쿠키(1일 이용 제한 적용)</li>
-                <li>유료 이용권 확인용 쿠키(결제 후 30일 이용권 인식)</li>
+                <li>유료 이용권 확인용 쿠키(결제 후 14일 이용권 인식)</li>
               </ul>
               위 쿠키는 이름·연락처 등 개인 식별정보를 담지 않습니다.
             </li>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
           <h2 className="text-base font-bold text-slate-900">제3조 (보유 및 이용 기간)</h2>
           <ul className="mt-2 list-disc space-y-1.5 pl-5">
             <li>검색 주소: 진단 처리 즉시 폐기(저장하지 않음).</li>
-            <li>서비스 쿠키: 무료 횟수 쿠키는 당일, 이용권 쿠키는 결제일로부터 최대 30일 후 만료.</li>
+            <li>서비스 쿠키: 무료 횟수 쿠키는 당일, 이용권 쿠키는 결제일로부터 최대 14일 후 만료.</li>
             <li>
               결제 관련 기록: 전자상거래 등에서의 소비자보호에 관한 법률 등 관련 법령이 정한 기간 동안
               결제 대행사 및 회사가 보관할 수 있습니다.

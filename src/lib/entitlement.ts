@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 /**
  * 서버 전용 HMAC 서명 토큰 — 두 종류.
- *  1) 엔타이틀먼트(ent): ₩9,900 결제 완료 시 발급. 상세 리포트 API 게이트(미결제 402) +
+ *  1) 엔타이틀먼트(ent): ₩19,900 결제 완료 시 발급. 상세 리포트 API 게이트(미결제 402) +
  *     당일 무제한 진단(쿼터 체크 스킵). 유효기간 = 결제일 당일 자정까지 아님, TTL 방식.
  *  2) 무료 쿼터(quota): 로그인 없는 1일 2회 무료 진단 카운터. 날짜+사용횟수를 HMAC 서명.
  *     시크릿 없으면 위조 가능하므로 시크릿 필수. (쿠키 삭제/시크릿창 우회는 v1 허용 — 한계.)
@@ -37,10 +37,11 @@ export interface Entitlement {
   oid: string;
 }
 
-// 결제 1건 = 30일 이용권(자동갱신 아님). exp/maxAge 모두 30일.
-export const ENT_TTL_DAYS = 30;
+// 결제 1건 = 14일 이용권(자동갱신 아님). exp/maxAge 모두 14일.
+// (기존 발급분 쿠키는 그대로 유효 — 이 상수는 신규 발급 TTL에만 적용됨.)
+export const ENT_TTL_DAYS = 14;
 
-/** 서명 토큰 생성. 결제 후 발급(30일 이용권). */
+/** 서명 토큰 생성. 결제 후 발급(14일 이용권). */
 export function signEntitlement(oid: string, ttlDays = ENT_TTL_DAYS): string {
   const payload: Entitlement = { t: "report", exp: Date.now() + ttlDays * 86400_000, oid };
   const body = b64url(Buffer.from(JSON.stringify(payload), "utf8"));

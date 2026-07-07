@@ -14,8 +14,8 @@ const TOSS_SECRET =
 
 /**
  * 결제 승인 — 서버에서만 시크릿 키로 토스 confirm 호출.
- * 클라이언트가 보낸 amount를 신뢰하지 않고 상품 허용 금액(₩9,900)과 대조 후 confirm.
- * 성공(DONE) 시 서버 서명 엔타이틀먼트 쿠키를 심어 상세 리포트 게이트 + 30일 무제한 진단 해제.
+ * 클라이언트가 보낸 amount를 신뢰하지 않고 상품 허용 금액(₩19,900)과 대조 후 confirm.
+ * 성공(DONE) 시 서버 서명 엔타이틀먼트 쿠키를 심어 상세 리포트 게이트 + 14일 무제한 진단 해제.
  */
 export async function POST(req: NextRequest) {
   let body: { paymentKey?: string; orderId?: string; amount?: number };
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     approvedAt: result.approvedAt,
   });
 
-  // 엔타이틀먼트 쿠키 발급 → 상세 리포트 게이트 통과 + 30일 무제한 진단.
+  // 엔타이틀먼트 쿠키 발급 → 상세 리포트 게이트 통과 + 14일 무제한 진단.
   const token = signEntitlement(orderId);
   okRes.cookies.set(ENT_COOKIE, token, {
     httpOnly: true,

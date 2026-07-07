@@ -1,17 +1,17 @@
 /**
- * 결제 정책 — 단일 상품(30일 이용권, 자동갱신 아님).
- * ₩9,900 결제 1건 = ① 상세 PDF 리포트 ② 30일 무제한 진단(엔타이틀먼트 쿠키로 쿼터 스킵).
+ * 결제 정책 — 단일 상품(14일 이용권, 자동갱신 아님).
+ * ₩19,900 결제 1건 = ① 상세 PDF 리포트 ② 14일 무제한 진단(엔타이틀먼트 쿠키로 쿼터 스킵).
  * 상품을 쪼개지 않는다.
  */
 
 export type ProductId = "report";
 
 export const PRICES = {
-  report: 9900, // 상세 리포트 + 30일 무제한 진단
+  report: 19900, // 상세 리포트 + 14일 무제한 진단
 } as const;
 
 export const ORDER_NAMES: Record<ProductId, string> = {
-  report: "무인레이더 상세 리포트(PDF) + 30일 무제한 진단",
+  report: "무인레이더 상세 리포트(PDF) + 14일 무제한 진단",
 };
 
 /**

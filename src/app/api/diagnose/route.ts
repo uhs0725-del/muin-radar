@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         {
           ok: false,
           quotaExceeded: true,
-          error: `오늘 무료 진단 ${FREE_DAILY_LIMIT}회를 다 썼습니다. ₩9,900 상세 리포트를 결제하면 30일 무제한 진단 + 상세 PDF 리포트를 이용할 수 있어요.`,
+          error: `오늘 무료 진단 ${FREE_DAILY_LIMIT}회를 다 썼습니다. ₩19,900 상세 리포트를 결제하면 14일 무제한 진단 + 상세 PDF 리포트를 이용할 수 있어요.`,
         },
         { status: 402 },
       );

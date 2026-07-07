@@ -14,7 +14,7 @@ function Cta({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
     >
-      내 동네로 받아보기 → ₩9,900 · 30일 무제한 + PDF
+      내 동네로 받아보기 → ₩19,900 · 14일 무제한 + PDF
     </button>
   );
 }
@@ -57,13 +57,13 @@ export default function SampleReportPage() {
         </div>
         <p className="mt-1 text-sm text-slate-500">
           경쟁 매장 전체 리스트·4개 반경 비교·종합 결론을 내가 고른 주소와 업종으로. A4 인쇄용 PDF +
-          30일 무제한 진단 포함.
+          14일 무제한 진단 포함.
         </p>
         <div className="mt-4">
           <Cta onClick={goCheckout} />
         </div>
         <p className="mt-2 text-center text-xs text-slate-400">
-          테스트 결제 모드 · 30일 이용권(자동갱신 아님)
+          테스트 결제 모드 · 14일 이용권(자동갱신 아님)
         </p>
       </div>
     </main>

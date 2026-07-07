@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReportView, { type ReportData } from "@/components/ReportView";
+import { PRICES } from "@/lib/pricing";
 
 interface Ctx {
   address: string;
@@ -70,14 +71,14 @@ export default function ReportPage() {
         <div className="mb-3 text-4xl">🔒</div>
         <h1 className="text-lg font-bold text-slate-900">상세 리포트는 유료입니다</h1>
         <p className="mt-2 text-sm text-slate-500">
-          ₩9,900 · 30일 무제한 진단 + 상세 PDF 리포트. 경쟁 매장 전체 리스트(거리), 4개 반경 비교
-          테이블, 종합 결론을 A4 인쇄용으로 제공합니다.
+          ₩{PRICES.report.toLocaleString("ko-KR")} · 14일 무제한 진단 + 상세 PDF 리포트. 경쟁 매장
+          전체 리스트(거리), 4개 반경 비교 테이블, 종합 결론을 A4 인쇄용으로 제공합니다.
         </p>
         <button
           onClick={() => router.push("/checkout")}
           className="mt-5 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800"
         >
-          ₩9,900 결제하고 리포트 보기
+          ₩{PRICES.report.toLocaleString("ko-KR")} 결제하고 리포트 보기
         </button>
         <button
           onClick={() => router.push("/report/sample")}
