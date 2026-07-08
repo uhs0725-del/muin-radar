@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "무인업종 상권 포화도 진단",
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body>
         {children}
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
